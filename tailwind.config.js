@@ -1,7 +1,7 @@
 /** @type {import('tailwindcss').Config} */
-module.exports = {
+export default {
   darkMode: ["class"],
-  content: ["./index.html", "./src/**/*.{ts,tsx,js,jsx}"],
+  content: ["./index.html", "./src/**/*.{js,jsx,ts,tsx}"],
   theme: {
     extend: {
       borderRadius: {
@@ -54,8 +54,8 @@ module.exports = {
         foundation: '#F9FAFB',
       },
       fontFamily: {
-        inter: ['Inter', 'sans-serif'],
-        kanit: ['Kanit', 'sans-serif'],
+        inter: ['Inter', 'Anakotmai', 'sans-serif'],
+        kanit: ['Anakotmai', 'sans-serif'],
       },
       fontSize: {
         'display': ['7.5rem', { lineHeight: '1', letterSpacing: '-0.04em' }],
