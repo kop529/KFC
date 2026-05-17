@@ -1,39 +1,40 @@
-import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useEffect, useMemo } from 'react';
+import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 
 const policies = [
   {
     id: 'economy',
-    th: 'โมเดล\nเศรษฐกิจ\nใหม่',
-    en: 'New\nEconomic\nModel',
-    detailTh: 'สร้างเศรษฐกิจใหม่\nสร้างงานคุณภาพ\nสร้างเทคโนโลยีคนไทย',
-    detailEn: 'Build New Economy,\nCreate Quality Jobs,\nEmpower Thai Tech.',
+    th: 'พัฒนา\nผู้เรียน',
+    en: 'Develop\nStudents',
+    detailTh: 'ยกระดับการศึกษา\nสร้างทักษะแห่งอนาคต\nปลดล็อกศักยภาพผู้เรียน',
+    detailEn: 'Elevate Education,\nFuture-Ready Skills,\nUnlock Potential.',
     image: 'https://images.unsplash.com/photo-1535401991746-da3d9055713e?w=1920&q=80',
     points: "0,0 200,0 100,173",
-    textPos: { x: 100, y: 60 },
-    detailSide: 'right'
-  },
-  {
-    id: 'security',
-    th: 'ประชาธิปไตย\nความมั่นคง\nใหม่',
-    en: 'Democracy\n&\nSecurity',
-    detailTh: 'ประชาธิปไตยตั้งมั่น\nกองทัพทันสมัย\nพร้อมรับความมั่นคงใหม่',
-    detailEn: 'Firm Democracy,\nModern Military,\nReady for New Security.',
-    image: 'https://images.unsplash.com/photo-1555848962-6e79363ec18f?w=1920&q=80',
-    points: "200,0 400,0 300,173",
-    textPos: { x: 300, y: 60 },
+    textPos: { x: 100, y: 44 },
     detailSide: 'left'
   },
   {
+    id: 'security',
+    th: 'พัฒนา\nสังคม',
+    en: 'Develop\nSociety',
+    detailTh: 'สร้างสังคมเท่าเทียม\nปฏิรูปกระบวนการยุติธรรม\nความมั่นคงของประชาชน',
+    detailEn: 'Equal Society,\nJustice Reform,\nHuman Security.',
+    image: 'https://images.unsplash.com/photo-1555848962-6e79363ec18f?w=1920&q=80',
+    points: "200,0 400,0 300,173",
+    textPos: { x: 300, y: 44 },
+    detailSide: 'right'
+  },
+  {
     id: 'quality',
-    th: 'คุณภาพ\nชีวิต',
-    en: 'Quality\nof Life',
-    detailTh: 'สวัสดิการดี\nสิ่งแวดล้อมดี\nคนไทยชีวิตดี',
-    detailEn: 'Better Welfare, Clean Environment,\nBetter Life for All.',
+    th: 'พัฒนา\nอนาคต',
+    en: 'Develop\nFuture',
+    detailTh: 'เทคโนโลยีล้ำสมัย\nสิ่งแวดล้อมที่ยั่งยืน\nประเทศไทยก้าวหน้า',
+    detailEn: 'Advanced Tech,\nSustainable Environment,\nProgressive Thailand.',
     image: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=1920&q=80',
     points: "100,173 300,173 200,346",
-    textPos: { x: 200, y: 240 },
-    detailSide: 'top'
+    textPos: { x: 200, y: 224 },
+    detailSide: 'bottom'
   }
 ];
 
@@ -41,20 +42,62 @@ const centerTriangle = {
   th: 'นโยบาย\n3 มิติ',
   en: '3 Dimension\nPolicies',
   points: "100,173 300,173 200,0",
-  textPos: { x: 200, y: 110 }
+  textPos: { x: 200, y: 114 }
 };
 
 export default function PoliciesSection({ lang }) {
+  const navigate = useNavigate();
   const [hovered, setHovered] = useState(null);
+  const [lastTapped, setLastTapped] = useState(null); // For two-tap mobile UX
 
-  const activePolicy = policies.find(p => p.id === hovered);
+  // 1. Performance: Preload images on mount
+  useEffect(() => {
+    policies.forEach(p => {
+      const img = new Image();
+      img.src = p.image;
+    });
+  }, []);
+
+  const activePolicy = useMemo(() => 
+    policies.find(p => p.id === hovered) || policies[0],
+    [hovered]
+  );
+
+  // 2. Fluidity: Parallax Background
+  const { scrollYProgress } = useScroll();
+  const bgY = useTransform(scrollYProgress, [0, 1], ['0%', '10%']);
+  const bgScale = useTransform(scrollYProgress, [0, 1], [1.05, 1]);
+
+  const handleInteraction = (id, isClick = false) => {
+    const isMobile = window.matchMedia("(max-width: 768px)").matches;
+    
+    if (isMobile && isClick) {
+      if (lastTapped === id) {
+        navigate(`/policies/${id}`);
+      } else {
+        setHovered(id);
+        setLastTapped(id);
+      }
+    } else if (isClick) {
+      navigate(`/policies/${id}`);
+    } else {
+      setHovered(id);
+    }
+  };
+
+  const handleKeyDown = (e, id) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      navigate(`/policies/${id}`);
+    }
+  };
 
   return (
     <section 
-      className="relative min-h-[100vh] flex items-center justify-center overflow-hidden bg-[#0f172a] pt-48 pb-24" 
+      className="relative min-h-[100vh] flex items-center justify-center overflow-hidden bg-[#0B0F17] py-28 lg:py-40" 
       id="policies"
     >
-      {/* Immersive Background Transition */}
+      {/* Immersive Background Transition with Parallax */}
       <AnimatePresence>
         {hovered && (
           <motion.div
@@ -62,38 +105,45 @@ export default function PoliciesSection({ lang }) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.6 }}
-            className="absolute inset-0 z-0"
+            transition={{ duration: 0.8 }}
+            style={{ y: bgY, scale: bgScale }}
+            className="absolute inset-0 z-0 origin-center"
           >
             <img 
               src={activePolicy.image} 
               className="w-full h-full object-cover" 
               alt="" 
             />
-            <div className="absolute inset-0 bg-[#0f172a]/90 mix-blend-multiply" />
-            <div className="absolute inset-0 bg-gradient-to-b from-[#0f172a]/50 via-transparent to-[#0f172a]/50" />
+            <div className="absolute inset-0 bg-[#0B0F17]/85 mix-blend-multiply" />
+            <div className="absolute inset-0 bg-gradient-to-b from-[#0B0F17] via-transparent to-[#0B0F17]" />
           </motion.div>
         )}
       </AnimatePresence>
 
-      <div className="relative z-10 w-full max-w-7xl mx-auto px-6 flex flex-col items-center">
+      <motion.div 
+        animate={{ 
+          y: hovered === 'quality' ? -100 : 0 
+        }}
+        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+        className="relative z-10 w-full max-w-7xl mx-auto px-6 flex flex-col items-center"
+      >
         
-        {/* Subtle Header */}
+        {/* Header with tighter Swiss typography */}
         <motion.div 
           animate={{ opacity: hovered ? 0 : 1, y: hovered ? -20 : 0 }}
-          className="text-center mb-16"
+          className="text-center mb-32"
         >
-          <div className={`flex flex-col items-center gap-6 ${lang === 'th' ? 'font-kanit' : 'font-inter'}`}>
-            <h2 className="text-white text-4xl lg:text-6xl font-black tracking-tighter uppercase leading-none">
-              {lang === 'th' ? 'นโยบาย' : 'Our Policies'}
+          <div className={`flex flex-col items-center gap-8 ${lang === 'th' ? 'font-anakotmai' : 'font-inter'}`}>
+            <h2 className="text-white text-5xl lg:text-8xl font-black tracking-tighter uppercase leading-none">
+              {lang === 'th' ? 'นโยบาย' : 'Vision'}
             </h2>
             
             <div className="flex flex-col items-center">
-              <span className="text-white/40 text-xs lg:text-sm font-bold tracking-[0.3em] uppercase mb-2">
+              <span className="text-white/30 text-[10px] lg:text-xs font-black tracking-[0.5em] uppercase mb-4">
                 CHONCHAI PEOPLE'S
               </span>
-              <div className="flex items-center text-[#FF6B00] text-sm lg:text-lg">
-                <span className="relative inline-block mr-1">
+              <div className="flex items-center text-[#FF6B00] text-sm lg:text-base font-bold">
+                <span className="relative inline-block mr-2">
                   พรรค
                   <span className="absolute inset-x-0 top-[55%] h-[2px] bg-[#FF6B00]" />
                 </span>
@@ -103,118 +153,161 @@ export default function PoliciesSection({ lang }) {
           </div>
         </motion.div>
 
-        {/* The SVG Triangle Grid - Reduced Size */}
-        <div className="relative w-full max-w-[400px] aspect-[400/346]">
+        {/* The SVG Triangle Grid */}
+        <div className="relative w-full max-w-[480px] aspect-[400/346]">
           <svg 
             viewBox="0 0 400 346" 
-            className="w-full h-full"
+            className="w-full h-full drop-shadow-2xl"
             xmlns="http://www.w3.org/2000/svg"
           >
-            {/* 1. Rendering Layer: The Triangles */}
-            {policies.map((p) => (
+            {/* 1. STABLE INTERACTION LAYER (Hidden, Does Not Move) */}
+            {/* This prevents the "wobble" by keeping the hover targets at fixed coordinates */}
+            <g className="opacity-0">
+              {policies.map((p) => (
+                <polygon
+                  key={`hit-${p.id}`}
+                  points={p.points}
+                  className="cursor-pointer outline-none pointer-events-auto"
+                  role="link"
+                  tabIndex={0}
+                  aria-label={lang === 'th' ? p.th.replace(/\n/g, ' ') : p.en.replace(/\n/g, ' ')}
+                  onMouseEnter={() => handleInteraction(p.id)}
+                  onMouseLeave={() => { setHovered(null); setLastTapped(null); }}
+                  onClick={() => handleInteraction(p.id, true)}
+                  onKeyDown={(e) => handleKeyDown(e, p.id)}
+                />
+              ))}
+            </g>
+
+            {/* 2. ANIMATED VISUAL LAYER (Moves with Content Lift) */}
+            <motion.g
+              animate={{ 
+                y: hovered === 'quality' ? -80 : 0 
+              }}
+              transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+              className="pointer-events-none"
+            >
+              {/* Rendering Layer: The Triangles */}
+              {policies.map((p) => (
+                <motion.polygon
+                  key={`poly-${p.id}`}
+                  points={p.points}
+                  initial={false}
+                  animate={{
+                    fill: hovered === p.id ? 'rgba(255,255,255,0)' : '#FF6B00',
+                    stroke: hovered === p.id ? '#ffffff' : '#0B0F17',
+                    strokeWidth: hovered === p.id ? 2 : 4,
+                    opacity: hovered && hovered !== p.id ? 0.05 : 1,
+                  }}
+                  transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                />
+              ))}
+
               <motion.polygon
-                key={`poly-${p.id}`}
-                points={p.points}
-                initial={false}
-                animate={{
-                  fill: hovered === p.id ? 'rgba(255,255,255,0)' : '#FF6B00',
-                  stroke: hovered === p.id ? '#ffffff' : '#0f172a',
-                  strokeWidth: hovered === p.id ? 2 : 4,
-                  opacity: hovered && hovered !== p.id ? 0 : 1,
+                points={centerTriangle.points}
+                fill="#FF6B00"
+                stroke="#0B0F17"
+                strokeWidth="4"
+                animate={{ 
+                  opacity: hovered ? 0.05 : 1,
+                  fill: '#FF6B00'
                 }}
                 transition={{ duration: 0.4 }}
               />
-            ))}
 
-            <motion.polygon
-              points={centerTriangle.points}
-              fill="#FF6B00"
-              stroke="#0f172a"
-              strokeWidth="4"
-              animate={{ opacity: hovered ? 0 : 1 }}
-              transition={{ duration: 0.4 }}
-            />
-
-            {/* 2. Text Layer: Labels inside triangles */}
-            <AnimatePresence>
-              {/* Default labels (hidden on hover) */}
-              {!hovered && (
-                <motion.g initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                  {policies.map((p) => (
+              {/* Text Layer */}
+              <AnimatePresence>
+                {!hovered && (
+                  <motion.g initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                    {policies.map((p) => (
+                      <text
+                        key={`label-${p.id}`}
+                        x={p.textPos.x}
+                        y={p.textPos.y}
+                        textAnchor="middle"
+                        fill="white"
+                        className={`font-black text-[18px] lg:text-[20px] tracking-tighter pointer-events-none ${lang === 'th' ? 'font-anakotmai' : 'font-inter'}`}
+                      >
+                        {(lang === 'th' ? p.th : p.en).split('\n').map((line, i) => <tspan key={i} x={p.textPos.x} dy={i === 0 ? 0 : 22}>{line}</tspan>)}
+                      </text>
+                    ))}
                     <text
-                      key={`label-${p.id}`}
-                      x={p.textPos.x} y={p.textPos.y}
+                      x={centerTriangle.textPos.x}
+                      y={centerTriangle.textPos.y}
                       textAnchor="middle"
-                      fill="white"
-                      className={`font-black text-[14px] pointer-events-none ${lang === 'th' ? 'font-kanit' : 'font-inter'}`}
+                      fill="#111827"
+                      className={`font-black pointer-events-none ${
+                        lang === 'th' 
+                          ? 'font-anakotmai text-[17px] lg:text-[18px]' 
+                          : 'font-inter text-[13px] lg:text-[14px] tracking-[0.05em] uppercase'
+                      }`}
                     >
-                      {(lang === 'th' ? p.th : p.en).split('\n').map((line, i) => <tspan key={i} x={p.textPos.x} dy={i === 0 ? 0 : 16}>{line}</tspan>)}
+                      {(lang === 'th' ? centerTriangle.th : centerTriangle.en).split('\n').map((line, i) => (
+                        <tspan 
+                          key={i} 
+                          x={centerTriangle.textPos.x} 
+                          dy={i === 0 ? 0 : (lang === 'th' ? 20 : 16)}
+                        >
+                          {line}
+                        </tspan>
+                      ))}
                     </text>
-                  ))}
-                  <text
-                    x={centerTriangle.textPos.x} y={centerTriangle.textPos.y}
+                  </motion.g>
+                )}
+              </AnimatePresence>
+
+              {/* Active Label */}
+              <AnimatePresence>
+                {hovered && (
+                  <motion.text
+                    key={`active-label-${hovered}`}
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    x={activePolicy.textPos.x}
+                    y={activePolicy.textPos.y}
                     textAnchor="middle"
-                    fill="#111827"
-                    className={`font-black text-[14px] pointer-events-none ${lang === 'th' ? 'font-kanit' : 'font-inter'}`}
+                    fill="white"
+                    className={`font-black text-[18px] lg:text-[20px] tracking-tighter pointer-events-none ${lang === 'th' ? 'font-anakotmai' : 'font-inter'}`}
                   >
-                    {(lang === 'th' ? centerTriangle.th : centerTriangle.en).split('\n').map((line, i) => <tspan key={i} x={centerTriangle.textPos.x} dy={i === 0 ? 0 : 16}>{line}</tspan>)}
-                  </text>
-                </motion.g>
-              )}
-            </AnimatePresence>
-
-            {/* Active Label (Stays visible in the outlined triangle) */}
-            <AnimatePresence>
-              {hovered && (
-                <motion.text
-                  key={`active-label-${hovered}`}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  x={activePolicy.textPos.x} y={activePolicy.textPos.y}
-                  textAnchor="middle"
-                  fill="white"
-                  className={`font-black text-[14px] pointer-events-none ${lang === 'th' ? 'font-kanit' : 'font-inter'}`}
-                >
-                  {(lang === 'th' ? activePolicy.th : activePolicy.en).split('\n').map((line, i) => <tspan key={i} x={activePolicy.textPos.x} dy={i === 0 ? 0 : 16}>{line}</tspan>)}
-                </motion.text>
-              )}
-            </AnimatePresence>
-
-            {/* 3. Interaction Layer: Invisible polygons on top for perfect hit detection */}
-            {policies.map((p) => (
-              <polygon
-                key={`hit-${p.id}`}
-                points={p.points}
-                fill="transparent"
-                className="cursor-pointer"
-                onMouseEnter={() => setHovered(p.id)}
-                onMouseLeave={() => setHovered(null)}
-              />
-            ))}
+                    {(lang === 'th' ? activePolicy.th : activePolicy.en).split('\n').map((line, i) => <tspan key={i} x={activePolicy.textPos.x} dy={i === 0 ? 0 : 22}>{line}</tspan>)}
+                  </motion.text>
+                )}
+              </AnimatePresence>
+            </motion.g>
           </svg>
 
-          {/* 4. Overlay Layer: Detail Text that fades in next to the hovered triangle */}
+          {/* 4. Overlay Detail Text - Precise Reference Alignment */}
           <AnimatePresence>
             {hovered && (
               <motion.div
                 key={`detail-${hovered}`}
-                initial={{ opacity: 0, x: activePolicy.detailSide === 'left' ? 30 : activePolicy.detailSide === 'right' ? -30 : 0, y: activePolicy.detailSide === 'top' ? 30 : 0 }}
-                animate={{ opacity: 1, x: 0, y: 0 }}
+                initial={{ 
+                  opacity: 0, 
+                  x: activePolicy.detailSide === 'left' ? 60 : activePolicy.detailSide === 'right' ? -60 : 0, 
+                  y: activePolicy.detailSide === 'top' ? 60 : activePolicy.detailSide === 'bottom' ? -60 : -20,
+                  filter: 'blur(10px)'
+                }}
+                animate={{ opacity: 1, x: 0, y: activePolicy.detailSide === 'top' ? 0 : -20, filter: 'blur(0px)' }}
                 exit={{ opacity: 0 }}
-                className={`absolute z-20 w-[280px] lg:w-[500px] pointer-events-none
-                  ${activePolicy.detailSide === 'left' ? 'right-[105%] top-0 lg:top-1/4 text-right' : ''}
-                  ${activePolicy.detailSide === 'right' ? 'left-[105%] top-0 lg:top-1/4 text-left' : ''}
-                  ${activePolicy.detailSide === 'top' ? 'bottom-[105%] left-1/2 -translate-x-1/2 text-center' : ''}
+                transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+                className={`absolute z-20 w-screen max-w-[280px] lg:max-w-[360px] pointer-events-none
+                  ${activePolicy.detailSide === 'left' ? 'lg:right-[110%] lg:top-0' : ''}
+                  ${activePolicy.detailSide === 'right' ? 'lg:left-[110%] lg:top-0' : ''}
+                  ${activePolicy.detailSide === 'bottom' ? 'lg:top-[110%] lg:left-1/2 lg:-translate-x-1/2' : ''}
+                  left-1/2 -translate-x-1/2 lg:translate-x-0 lg:left-auto
+                  top-[105%] lg:top-auto
+                  text-center
                 `}
-              >
-                <h3 className={`text-white text-3xl lg:text-6xl font-black leading-tight tracking-tighter mb-4 ${lang === 'th' ? 'font-kanit' : 'font-inter'}`}>
+                >
+                <h3 className={`text-white text-lg lg:text-[clamp(1.2rem,2.5vw,2rem)] font-black leading-tight tracking-tight mb-4 whitespace-pre-line ${lang === 'th' ? 'font-anakotmai' : 'font-inter uppercase'}`}>
                   {lang === 'th' ? activePolicy.detailTh : activePolicy.detailEn}
                 </h3>
-                <motion.div 
-                  initial={{ width: 0 }}
-                  animate={{ width: 60 }}
-                  className="h-1.5 bg-[#FF6B00] inline-block" 
-                />
+
+                
+                {/* Mobile Tap Indicator */}
+                <div className="lg:hidden mt-4 text-orange-500 text-[9px] font-black tracking-[0.2em] uppercase animate-pulse">
+                  {lang === 'th' ? 'แตะอีกครั้งเพื่อดูรายละเอียด' : 'Tap again to explore'}
+                </div>
               </motion.div>
             )}
           </AnimatePresence>
@@ -223,12 +316,12 @@ export default function PoliciesSection({ lang }) {
         {/* Hint Text */}
         <motion.div 
           animate={{ opacity: hovered ? 0 : 1 }}
-          className="mt-16 flex flex-col items-center gap-2"
+          className="mt-32 flex flex-col items-center gap-6"
         >
-          <div className="w-px h-12 bg-gradient-to-b from-[#FF6B00] to-transparent" />
-          <span className="text-white/20 text-[10px] tracking-[0.4em] font-inter uppercase">Hover to Explore</span>
+          <div className="w-[1px] h-16 bg-gradient-to-b from-[#FF6B00] to-transparent" />
+          <span className="text-white/20 text-[9px] tracking-[0.6em] font-inter uppercase font-bold">Discover Dimensions</span>
         </motion.div>
-      </div>
+      </motion.div>
     </section>
   );
 }

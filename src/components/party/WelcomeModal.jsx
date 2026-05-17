@@ -2,21 +2,17 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
 
-let hasShownModal = false;
-
 export default function WelcomeModal() {
   const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
-    // Only show if it hasn't been shown in this session
-    if (!hasShownModal) {
-      const timer = setTimeout(() => {
-        setIsOpen(true);
-        hasShownModal = true;
-      }, 800);
-      return () => clearTimeout(timer);
-    }
+    // Show modal on every mount (refresh)
+    const timer = setTimeout(() => {
+      setIsOpen(true);
+    }, 500);
+    return () => clearTimeout(timer);
   }, []);
+
 
   const closeModal = () => {
     setIsOpen(false);

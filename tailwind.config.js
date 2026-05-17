@@ -55,7 +55,8 @@ export default {
       },
       fontFamily: {
         inter: ['Inter', 'Anakotmai', 'sans-serif'],
-        kanit: ['Anakotmai', 'sans-serif'],
+        anakotmai: ['Anakotmai', 'sans-serif'],
+        thai: ['Anakotmai', 'sans-serif'],
       },
       fontSize: {
         'display': ['7.5rem', { lineHeight: '1', letterSpacing: '-0.04em' }],

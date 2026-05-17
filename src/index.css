@@ -1,0 +1,153 @@
+@font-face {
+  font-family: 'Anakotmai';
+  src: url('./assets/fonts/anakotmai-light.woff2') format('woff2');
+  font-weight: 300;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Anakotmai';
+  src: url('./assets/fonts/anakotmai-medium.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Anakotmai';
+  src: url('./assets/fonts/anakotmai-bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+}
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 210 20% 98%;
+    --foreground: 221 39% 11%;
+    --card: 0 0% 100%;
+    --card-foreground: 221 39% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 221 39% 11%;
+    --primary: 221 39% 11%;
+    --primary-foreground: 210 20% 98%;
+    --secondary: 210 20% 96%;
+    --secondary-foreground: 221 39% 11%;
+    --muted: 210 20% 96%;
+    --muted-foreground: 215 16% 47%;
+    --accent: 24 100% 50%;
+    --accent-foreground: 221 39% 11%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 24 100% 50%;
+    --radius: 0.25rem;
+
+    /* Custom brand tokens */
+    --foundation-white: #F9FAFB;
+    --statesman-charcoal: #111827;
+    --radiant-amber: #FF6B00;
+    --glass-overlay: rgba(17, 24, 39, 0.03);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    background-color: var(--foundation-white);
+    color: var(--statesman-charcoal);
+    font-family: 'Inter', 'Anakotmai', sans-serif;
+    line-height: 1.7;
+  }
+
+  .font-thai {
+    font-family: 'Anakotmai', sans-serif;
+  }
+
+  .font-latin {
+    font-family: 'Inter', 'Anakotmai', sans-serif;
+  }
+}
+
+/* Radiant amber line */
+.amber-line {
+  background-color: var(--radiant-amber);
+}
+
+/* Frosted glass nav */
+.nav-frosted {
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  background-color: rgba(249, 250, 251, 0.85);
+  border-bottom: 1px solid rgba(17, 24, 39, 0.08);
+}
+
+/* Scroll fade-in */
+@keyframes fadeSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-slide-up {
+  animation: fadeSlideUp 0.7s ease forwards;
+}
+
+/* Staggered children */
+.stagger > *:nth-child(1) { animation-delay: 0.05s; }
+.stagger > *:nth-child(2) { animation-delay: 0.15s; }
+.stagger > *:nth-child(3) { animation-delay: 0.25s; }
+.stagger > *:nth-child(4) { animation-delay: 0.35s; }
+.stagger > *:nth-child(5) { animation-delay: 0.45s; }
+.stagger > *:nth-child(6) { animation-delay: 0.55s; }
+
+/* Policy card transition */
+.policy-card {
+  transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Leader portrait hover */
+.leader-portrait img {
+  transition: filter 0.5s ease, transform 0.5s ease;
+  filter: grayscale(100%) contrast(1.1);
+}
+
+.leader-portrait:hover img {
+  filter: grayscale(0%) contrast(1) sepia(15%) saturate(1.2);
+  transform: scale(1.02);
+}
+
+/* Timeline dot animation */
+@keyframes dotPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(0.8); }
+}
+
+.timeline-dot-active {
+  animation: dotPulse 2s ease infinite;
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Selection color */
+::selection {
+  background-color: var(--radiant-amber);
+  color: var(--statesman-charcoal);
+}
