@@ -3,13 +3,10 @@ import { useParams, useNavigate } from 'react-router-dom';
 import Navbar from '../components/party/Navbar';
 import PoliciesSection from '../components/party/PoliciesSection';
 import Footer from '../components/party/Footer';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { 
-  Search, X, ArrowLeft, Heart, AlertCircle, ArrowUpRight, 
-  Cpu, Leaf, GraduationCap, ShieldCheck, HeartPulse,
-  TrendingUp, Globe2, Landmark, Users2, Zap
+  Search, ArrowLeft
 } from 'lucide-react';
-import { toast } from 'sonner';
 
 const dimensionsData = {
   economy: {
@@ -72,28 +69,28 @@ function PolicyCard({ category, lang, index }) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, delay: index * 0.05, ease: [0.16, 1, 0.3, 1] }}
       whileHover={{ y: -10 }}
-      className="group relative bg-white rounded-3xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.08)] flex flex-col h-[400px] cursor-pointer"
+      className="group relative bg-[#111827] rounded-3xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.4)] flex flex-col h-[400px] cursor-pointer border border-white/5"
     >
       {/* Visual Header */}
       <div className="relative flex-grow overflow-hidden">
         <img 
           src={category.image} 
           alt="" 
-          className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
+          className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110 opacity-80 group-hover:opacity-100"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-60" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#111827] via-[#111827]/20 to-transparent opacity-90" />
       </div>
 
       {/* Label Footer */}
-      <div className="bg-white p-6 lg:p-8 flex items-center justify-center text-center">
-        <h3 className={`text-[#111827] text-lg lg:text-xl font-bold leading-tight ${lang === 'th' ? 'font-anakotmai' : 'font-inter'}`}>
+      <div className="bg-[#111827] p-6 lg:p-8 flex items-center justify-center text-center border-t border-white/5">
+        <h3 className={`text-white text-lg lg:text-xl font-bold leading-tight ${lang === 'th' ? 'font-anakotmai' : 'font-inter'}`}>
           {lang === 'th' ? category.th : category.en}
         </h3>
       </div>
 
       {/* Hidden Stack Decoration - Replicating the 'Fan' effect from reference */}
-      <div className="absolute -z-10 inset-0 bg-gray-200 rounded-3xl translate-x-2 translate-y-2 rotate-2 opacity-50" />
-      <div className="absolute -z-20 inset-0 bg-gray-100 rounded-3xl translate-x-4 translate-y-4 rotate-6 opacity-30" />
+      <div className="absolute -z-10 inset-0 bg-white/5 rounded-3xl translate-x-2 translate-y-2 rotate-2 opacity-50 border border-white/10" />
+      <div className="absolute -z-20 inset-0 bg-white/10 rounded-3xl translate-x-4 translate-y-4 rotate-6 opacity-30 border border-white/10" />
     </motion.div>
   );
 }
@@ -111,16 +108,16 @@ export default function PoliciesPage({ lang, setLang }) {
 
   if (!activeDimension) {
     return (
-      <div className="min-h-screen bg-[#F9FAFB] flex flex-col font-sans">
-        <Navbar lang={lang} setLang={setLang} />
+      <div className="min-h-screen bg-[#0B0F17] flex flex-col font-sans">
+        <Navbar lang={lang} setLang={setLang} theme="dark" />
         <PoliciesSection lang={lang} />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#F9FAFB] text-[#111827] flex flex-col font-sans selection:bg-[#FF6B00] selection:text-white">
-      <Navbar lang={lang} setLang={setLang} />
+    <div className="min-h-screen bg-[#0B0F17] text-white flex flex-col font-sans selection:bg-[#FF6B00] selection:text-white">
+      <Navbar lang={lang} setLang={setLang} theme="dark" />
       
       <main className="pt-32 lg:pt-48 pb-40 flex-grow">
         <div className="max-w-7xl mx-auto px-6 lg:px-12">
@@ -131,16 +128,16 @@ export default function PoliciesPage({ lang, setLang }) {
             transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
           >
             {/* Minimalist Top Nav */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 mb-20 border-b border-[#111827]/05 pb-12">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 mb-20 border-b border-white/5 pb-12">
               <div className="flex items-center gap-4">
                 <button
                   onClick={() => navigate('/policies')}
-                  className="flex items-center gap-3 text-[#111827]/40 hover:text-[#111827] transition-all duration-300 text-[10px] font-black uppercase tracking-[0.4em] group"
+                  className="flex items-center gap-3 text-white/40 hover:text-white transition-all duration-300 text-[10px] font-black uppercase tracking-[0.4em] group"
                 >
                   <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform duration-300" />
                   {lang === 'th' ? 'ย้อนกลับ' : 'Back'}
                 </button>
-                <div className="h-px w-12 bg-[#111827]/10" />
+                <div className="h-px w-12 bg-white/10" />
                 <span className={`text-[#FF6B00] text-[10px] font-black uppercase tracking-[0.4em] ${lang === 'th' ? 'font-anakotmai' : 'font-inter'}`}>
                   {lang === 'th' ? 'นโยบายพรรค' : 'PARTY POLICY'}
                 </span>
@@ -148,7 +145,7 @@ export default function PoliciesPage({ lang, setLang }) {
 
               {/* Search Field */}
               <div className="relative group max-w-sm w-full">
-                <span className="absolute inset-y-0 left-4 flex items-center text-[#111827]/20 group-focus-within:text-[#FF6B00] transition-colors">
+                <span className="absolute inset-y-0 left-4 flex items-center text-white/20 group-focus-within:text-[#FF6B00] transition-colors">
                   <Search size={18} />
                 </span>
                 <input
@@ -156,7 +153,7 @@ export default function PoliciesPage({ lang, setLang }) {
                   placeholder={lang === 'th' ? 'ค้นหา...' : 'Search...'}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full bg-[#111827]/03 border border-[#111827]/05 rounded-full py-3 pl-12 pr-10 text-sm focus:outline-none focus:border-[#FF6B00]/40 transition-all"
+                  className="w-full bg-white/5 border border-white/10 text-white placeholder:text-white/20 rounded-full py-3 pl-12 pr-10 text-sm focus:outline-none focus:border-[#FF6B00]/40 transition-all"
                 />
               </div>
             </div>
@@ -164,12 +161,12 @@ export default function PoliciesPage({ lang, setLang }) {
             {/* Editorial Headline */}
             <div className="grid lg:grid-cols-12 gap-12 lg:gap-24 mb-32 items-start">
               <div className="lg:col-span-9">
-                <h1 className={`text-5xl lg:text-8xl font-black text-[#111827] leading-[0.9] tracking-tighter mb-12 ${
+                <h1 className={`text-5xl lg:text-8xl font-black text-white leading-[0.9] tracking-tighter mb-12 ${
                   lang === 'th' ? 'font-anakotmai' : 'font-inter uppercase'
                 }`}>
                   {lang === 'th' ? activeDimension.th.title : activeDimension.en.title}
                 </h1>
-                <p className={`text-[#111827]/50 text-xl lg:text-2xl leading-relaxed max-w-5xl ${
+                <p className={`text-white/50 text-xl lg:text-2xl leading-relaxed max-w-5xl ${
                   lang === 'th' ? 'font-anakotmai' : 'font-inter font-light'
                 }`}>
                   {lang === 'th' ? activeDimension.th.description : activeDimension.en.description}
@@ -178,9 +175,9 @@ export default function PoliciesPage({ lang, setLang }) {
               
               <div className="lg:col-span-3 flex flex-col items-center lg:items-end justify-center">
                 <div className="text-center lg:text-right">
-                  <span className="text-[10px] font-black tracking-[0.5em] text-[#111827]/20 uppercase mb-2 block">Available</span>
+                  <span className="text-[10px] font-black tracking-[0.5em] text-white/20 uppercase mb-2 block">Available</span>
                   <div className="flex items-baseline justify-center lg:justify-end gap-2">
-                    <span className="text-7xl font-black text-[#111827] font-inter tracking-tighter">
+                    <span className="text-7xl font-black text-white font-inter tracking-tighter">
                       {activeDimension.categories.length * 8}
                     </span>
                     <span className="text-[#FF6B00] text-sm font-black font-inter uppercase">Policies</span>
@@ -190,7 +187,7 @@ export default function PoliciesPage({ lang, setLang }) {
             </div>
 
             {/* Cinematic Card Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-8 lg:gap-10">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-8 lg:gap-10">
                {activeDimension.categories.map((cat, idx) => (
                  <PolicyCard key={cat.id} category={cat} lang={lang} index={idx} />
                ))}

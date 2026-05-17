@@ -10,7 +10,7 @@ const navLinks = [
   { en: 'News', th: 'ข่าวสาร', href: '#news', type: 'anchor' },
 ];
 
-export default function Navbar({ lang, setLang }) {
+export default function Navbar({ lang, setLang, theme = 'light' }) {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const location = useLocation();
@@ -41,11 +41,19 @@ export default function Navbar({ lang, setLang }) {
     }
   };
 
+  const isDark = theme === 'dark';
+  const navBgClass = scrolled 
+    ? (isDark ? 'nav-frosted-dark' : 'nav-frosted') 
+    : 'bg-transparent';
+
+  const textColorClass = (scrolled && !isDark) ? 'text-[#111827]' : 'text-white';
+  const textHoverClass = (scrolled && !isDark) ? 'hover:text-[#FF6B00]' : 'hover:text-white';
+  const textMutedClass = (scrolled && !isDark) ? 'text-[#111827]/40 hover:text-[#111827]' : 'text-white/40 hover:text-white';
+  const separatorClass = (scrolled && !isDark) ? 'text-[#111827]/20' : 'text-white/20';
+
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
-        scrolled ? 'nav-frosted' : 'bg-transparent'
-      }`}
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${navBgClass}`}
     >
       <div className="max-w-7xl mx-auto px-6 lg:px-12 flex items-center justify-between h-20 lg:h-24">
         {/* Logo */}
@@ -64,9 +72,7 @@ export default function Navbar({ lang, setLang }) {
           
           <div className="h-4 w-px bg-white/20 hidden sm:block" />
           
-          <span className={`font-inter font-900 text-xs lg:text-sm tracking-[0.2em] uppercase transition-colors duration-300 ${
-            scrolled ? 'text-[#111827]' : 'text-white'
-          }`}>
+          <span className={`font-inter font-900 text-xs lg:text-sm tracking-[0.2em] uppercase transition-colors duration-300 ${textColorClass}`}>
             #TEAMCH___
           </span>
         </Link>
@@ -77,9 +83,7 @@ export default function Navbar({ lang, setLang }) {
             <button
               key={link.en}
               onClick={() => handleNav(link)}
-              className={`group relative transition-colors duration-300 ${
-                scrolled ? 'text-[#111827] hover:text-[#FF6B00]' : 'text-white/80 hover:text-white'
-              }`}
+              className={`group relative transition-colors duration-300 ${textColorClass}`}
             >
               <span className={`block text-base font-semibold tracking-wide ${lang === 'th' ? 'font-anakotmai' : 'font-inter'}`}>
                 {lang === 'th' ? link.th : link.en}
@@ -98,22 +102,18 @@ export default function Navbar({ lang, setLang }) {
               className={`px-2 py-1 transition-all duration-200 ${
                 lang === 'en'
                   ? 'text-[#FF6B00] border-b-2 border-[#FF6B00]'
-                  : scrolled 
-                    ? 'text-[#111827]/40 hover:text-[#111827]' 
-                    : 'text-white/40 hover:text-white'
+                  : textMutedClass
               }`}
             >
               EN
             </button>
-            <span className={scrolled ? 'text-[#111827]/20' : 'text-white/20'}>|</span>
+            <span className={separatorClass}>|</span>
             <button
               onClick={() => setLang('th')}
               className={`px-2 py-1 font-anakotmai transition-all duration-200 ${
                 lang === 'th'
                   ? 'text-[#FF6B00] border-b-2 border-[#FF6B00]'
-                  : scrolled 
-                    ? 'text-[#111827]/40 hover:text-[#111827]' 
-                    : 'text-white/40 hover:text-white'
+                  : textMutedClass
               }`}
             >
               TH
@@ -122,9 +122,7 @@ export default function Navbar({ lang, setLang }) {
 
           {/* Mobile Menu Button */}
           <button
-            className={`lg:hidden transition-colors duration-300 ${
-              scrolled ? 'text-[#111827]' : 'text-white'
-            }`}
+            className={`lg:hidden transition-colors duration-300 ${textColorClass}`}
             onClick={() => setMenuOpen(!menuOpen)}
           >
             {menuOpen ? <X size={26} /> : <Menu size={26} />}
@@ -140,16 +138,26 @@ export default function Navbar({ lang, setLang }) {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2 }}
-            className="lg:hidden nav-frosted border-t border-[#111827]/08 px-6 py-6 space-y-4"
+            className={`lg:hidden border-t px-6 py-6 space-y-4 ${
+              isDark 
+                ? 'nav-frosted-dark border-white/10' 
+                : 'nav-frosted border-[#111827]/08'
+            }`}
           >
             {navLinks.map((link) => (
               <button
                 key={link.en}
                 onClick={() => handleNav(link)}
-                className="block w-full text-left text-lg font-inter font-medium text-[#111827] hover:text-[#FF6B00] transition-colors py-2"
+                className={`block w-full text-left text-lg font-inter font-medium transition-colors py-2 ${
+                  isDark 
+                    ? 'text-white hover:text-[#FF6B00]' 
+                    : 'text-[#111827] hover:text-[#FF6B00]'
+                }`}
               >
                 {link.en}
-                <span className="ml-3 font-anakotmai text-sm text-[#111827]/40">{link.th}</span>
+                <span className={`ml-3 font-anakotmai text-sm ${isDark ? 'text-white/40' : 'text-[#111827]/40'}`}>
+                  {link.th}
+                </span>
               </button>
             ))}
           </motion.div>

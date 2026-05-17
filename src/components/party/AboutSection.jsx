@@ -76,7 +76,7 @@ export default function AboutSection({ lang }) {
             </motion.h2>
 
             {/* Stats */}
-            <div className="grid grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <StatCard num={c.stat1.num} label={c.stat1.label} lang={lang} delay={0.2} />
               <StatCard num={c.stat2.num} label={c.stat2.label} lang={lang} delay={0.35} />
               <StatCard num={c.stat3.num} label={c.stat3.label} lang={lang} delay={0.5} />

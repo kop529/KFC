@@ -91,6 +91,13 @@
   border-bottom: 1px solid rgba(17, 24, 39, 0.08);
 }
 
+.nav-frosted-dark {
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  background-color: rgba(11, 15, 23, 0.85);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
 /* Scroll fade-in */
 @keyframes fadeSlideUp {
   from {

@@ -279,36 +279,37 @@ export default function PoliciesSection({ lang }) {
           {/* 4. Overlay Detail Text - Precise Reference Alignment */}
           <AnimatePresence>
             {hovered && (
-              <motion.div
-                key={`detail-${hovered}`}
-                initial={{ 
-                  opacity: 0, 
-                  x: activePolicy.detailSide === 'left' ? 60 : activePolicy.detailSide === 'right' ? -60 : 0, 
-                  y: activePolicy.detailSide === 'top' ? 60 : activePolicy.detailSide === 'bottom' ? -60 : -20,
-                  filter: 'blur(10px)'
-                }}
-                animate={{ opacity: 1, x: 0, y: activePolicy.detailSide === 'top' ? 0 : -20, filter: 'blur(0px)' }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+              <div
                 className={`absolute z-20 w-screen max-w-[280px] lg:max-w-[360px] pointer-events-none
-                  ${activePolicy.detailSide === 'left' ? 'lg:right-[110%] lg:top-0' : ''}
-                  ${activePolicy.detailSide === 'right' ? 'lg:left-[110%] lg:top-0' : ''}
+                  ${activePolicy.detailSide === 'left' ? 'lg:right-[110%] lg:left-auto lg:top-[20%] lg:translate-x-0' : ''}
+                  ${activePolicy.detailSide === 'right' ? 'lg:left-[110%] lg:top-[20%] lg:translate-x-0' : ''}
                   ${activePolicy.detailSide === 'bottom' ? 'lg:top-[110%] lg:left-1/2 lg:-translate-x-1/2' : ''}
-                  left-1/2 -translate-x-1/2 lg:translate-x-0 lg:left-auto
-                  top-[105%] lg:top-auto
+                  left-1/2 -translate-x-1/2 top-[105%] lg:top-auto
                   text-center
                 `}
+              >
+                <motion.div
+                  key={`detail-${hovered}`}
+                  initial={{ 
+                    opacity: 0, 
+                    x: activePolicy.detailSide === 'left' ? 40 : activePolicy.detailSide === 'right' ? -40 : 0, 
+                    y: activePolicy.detailSide === 'bottom' ? -40 : 20,
+                    filter: 'blur(10px)'
+                  }}
+                  animate={{ opacity: 1, x: 0, y: 0, filter: 'blur(0px)' }}
+                  exit={{ opacity: 0, filter: 'blur(10px)', transition: { duration: 0.3 } }}
+                  transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
                 >
-                <h3 className={`text-white text-lg lg:text-[clamp(1.2rem,2.5vw,2rem)] font-black leading-tight tracking-tight mb-4 whitespace-pre-line ${lang === 'th' ? 'font-anakotmai' : 'font-inter uppercase'}`}>
-                  {lang === 'th' ? activePolicy.detailTh : activePolicy.detailEn}
-                </h3>
+                  <h3 className={`text-white text-lg lg:text-[clamp(1.2rem,2.5vw,2rem)] font-black leading-tight tracking-tight mb-4 whitespace-pre-line ${lang === 'th' ? 'font-anakotmai' : 'font-inter uppercase'}`}>
+                    {lang === 'th' ? activePolicy.detailTh : activePolicy.detailEn}
+                  </h3>
 
-                
-                {/* Mobile Tap Indicator */}
-                <div className="lg:hidden mt-4 text-orange-500 text-[9px] font-black tracking-[0.2em] uppercase animate-pulse">
-                  {lang === 'th' ? 'แตะอีกครั้งเพื่อดูรายละเอียด' : 'Tap again to explore'}
-                </div>
-              </motion.div>
+                  {/* Mobile Tap Indicator */}
+                  <div className="lg:hidden mt-4 text-orange-500 text-[9px] font-black tracking-[0.2em] uppercase animate-pulse">
+                    {lang === 'th' ? 'แตะอีกครั้งเพื่อดูรายละเอียด' : 'Tap again to explore'}
+                  </div>
+                </motion.div>
+              </div>
             )}
           </AnimatePresence>
         </div>
