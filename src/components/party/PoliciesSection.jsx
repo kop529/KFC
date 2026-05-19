@@ -1,15 +1,15 @@
 import { useState, useEffect, useMemo } from 'react';
-import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
+import { motion, AnimatePresence, useScroll, useTransform, useSpring } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 
-const policies = [
+export const policies = [
   {
     id: 'economy',
     th: 'พัฒนา\nผู้เรียน',
     en: 'Develop\nStudents',
-    detailTh: 'ยกระดับการศึกษา\nสร้างทักษะแห่งอนาคต\nปลดล็อกศักยภาพผู้เรียน',
-    detailEn: 'Elevate Education,\nFuture-Ready Skills,\nUnlock Potential.',
-    image: 'https://images.unsplash.com/photo-1535401991746-da3d9055713e?w=1920&q=80',
+    detailTh: 'ส่งเสริมการเรียน\nกิจกรรมสร้างสรรค์\nกฎระเบียบเชิงบวก',
+    detailEn: 'Promote Learning,\nCreative Activities,\nPositive Discipline.',
+    image: 'https://images.unsplash.com/photo-1535401991746-da3d9055713e?w=1200&q=75&auto=format&fit=crop',
     points: "0,0 200,0 100,173",
     textPos: { x: 100, y: 44 },
     detailSide: 'left'
@@ -18,9 +18,9 @@ const policies = [
     id: 'security',
     th: 'พัฒนา\nสังคม',
     en: 'Develop\nSociety',
-    detailTh: 'สร้างสังคมเท่าเทียม\nปฏิรูปกระบวนการยุติธรรม\nความมั่นคงของประชาชน',
-    detailEn: 'Equal Society,\nJustice Reform,\nHuman Security.',
-    image: 'https://images.unsplash.com/photo-1555848962-6e79363ec18f?w=1920&q=80',
+    detailTh: 'สาธารณะประโยชน์\nนโยบายเพื่อชุมชน\nสังคมที่เกื้อกูล',
+    detailEn: 'Public Service,\nCommunity Policies,\nSupportive Society.',
+    image: 'https://images.unsplash.com/photo-1555848962-6e79363ec18f?w=1200&q=75&auto=format&fit=crop',
     points: "200,0 400,0 300,173",
     textPos: { x: 300, y: 44 },
     detailSide: 'right'
@@ -29,9 +29,9 @@ const policies = [
     id: 'quality',
     th: 'พัฒนา\nอนาคต',
     en: 'Develop\nFuture',
-    detailTh: 'เทคโนโลยีล้ำสมัย\nสิ่งแวดล้อมที่ยั่งยืน\nประเทศไทยก้าวหน้า',
-    detailEn: 'Advanced Tech,\nSustainable Environment,\nProgressive Thailand.',
-    image: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=1920&q=80',
+    detailTh: 'โรงเรียนสีเขียว\nจัดการทรัพยากร\nเพื่ออนาคตยั่งยืน',
+    detailEn: 'Green School,\nResource Management,\nSustainable Future.',
+    image: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=1200&q=75&auto=format&fit=crop',
     points: "100,173 300,173 200,346",
     textPos: { x: 200, y: 224 },
     detailSide: 'bottom'
@@ -49,14 +49,17 @@ export default function PoliciesSection({ lang }) {
   const navigate = useNavigate();
   const [hovered, setHovered] = useState(null);
   const [lastTapped, setLastTapped] = useState(null); // For two-tap mobile UX
+  const [isNavigating, setIsNavigating] = useState(false);
 
-  // 1. Performance: Preload images on mount
+  // Preload policy background images exactly once on mount
   useEffect(() => {
-    policies.forEach(p => {
+    const imgs = policies.map((p) => {
       const img = new Image();
       img.src = p.image;
+      return img;
     });
-  }, []);
+    return () => imgs.forEach(img => { img.src = ''; });
+  }, []); // ← empty array = runs once
 
   const activePolicy = useMemo(() => 
     policies.find(p => p.id === hovered) || policies[0],
@@ -65,29 +68,35 @@ export default function PoliciesSection({ lang }) {
 
   // 2. Fluidity: Parallax Background
   const { scrollYProgress } = useScroll();
-  const bgY = useTransform(scrollYProgress, [0, 1], ['0%', '10%']);
-  const bgScale = useTransform(scrollYProgress, [0, 1], [1.05, 1]);
+  const rawBgY = useTransform(scrollYProgress, [0, 1], ['0%', '10%']);
+  const rawBgScale = useTransform(scrollYProgress, [0, 1], [1.05, 1]);
+  
+  const bgY = useSpring(rawBgY, { stiffness: 100, damping: 30, restDelta: 0.001 });
+  const bgScale = useSpring(rawBgScale, { stiffness: 100, damping: 30, restDelta: 0.001 });
 
   const handleInteraction = (id, isClick = false) => {
     const isMobile = window.matchMedia("(max-width: 768px)").matches;
     
     if (isMobile && isClick) {
       if (lastTapped === id) {
+        setIsNavigating(true);
         navigate(`/policies/${id}`);
       } else {
         setHovered(id);
         setLastTapped(id);
       }
     } else if (isClick) {
+      setIsNavigating(true);
       navigate(`/policies/${id}`);
     } else {
-      setHovered(id);
+      if (!isNavigating) setHovered(id);
     }
   };
 
   const handleKeyDown = (e, id) => {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
+      setIsNavigating(true);
       navigate(`/policies/${id}`);
     }
   };
@@ -102,6 +111,7 @@ export default function PoliciesSection({ lang }) {
         {hovered && (
           <motion.div
             key={hovered}
+            layoutId={`policy-bg-${hovered}`}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -111,6 +121,8 @@ export default function PoliciesSection({ lang }) {
           >
             <img 
               src={activePolicy.image} 
+              loading="lazy"
+              decoding="async"
               className="w-full h-full object-cover" 
               alt="" 
             />
@@ -130,7 +142,7 @@ export default function PoliciesSection({ lang }) {
         
         {/* Header with tighter Swiss typography */}
         <motion.div 
-          animate={{ opacity: hovered ? 0 : 1, y: hovered ? -20 : 0 }}
+          animate={{ opacity: (hovered && !isNavigating) ? 0 : 1, y: (hovered && !isNavigating) ? -20 : 0 }}
           className="text-center mb-32"
         >
           <div className={`flex flex-col items-center gap-8 ${lang === 'th' ? 'font-anakotmai' : 'font-inter'}`}>
@@ -172,7 +184,7 @@ export default function PoliciesSection({ lang }) {
                   tabIndex={0}
                   aria-label={lang === 'th' ? p.th.replace(/\n/g, ' ') : p.en.replace(/\n/g, ' ')}
                   onMouseEnter={() => handleInteraction(p.id)}
-                  onMouseLeave={() => { setHovered(null); setLastTapped(null); }}
+                  onMouseLeave={() => { if (!isNavigating) { setHovered(null); setLastTapped(null); } }}
                   onClick={() => handleInteraction(p.id, true)}
                   onKeyDown={(e) => handleKeyDown(e, p.id)}
                 />
@@ -276,37 +288,60 @@ export default function PoliciesSection({ lang }) {
             </motion.g>
           </svg>
 
-          {/* 4. Overlay Detail Text - Precise Reference Alignment */}
+          {/* 4. Overlay Detail Text - Dynamic Origin Alignment */}
           <AnimatePresence>
             {hovered && (
               <div
-                className={`absolute z-20 w-screen max-w-[280px] lg:max-w-[360px] pointer-events-none
-                  ${activePolicy.detailSide === 'left' ? 'lg:right-[110%] lg:left-auto lg:top-[20%] lg:translate-x-0' : ''}
-                  ${activePolicy.detailSide === 'right' ? 'lg:left-[110%] lg:top-[20%] lg:translate-x-0' : ''}
-                  ${activePolicy.detailSide === 'bottom' ? 'lg:top-[110%] lg:left-1/2 lg:-translate-x-1/2' : ''}
-                  left-1/2 -translate-x-1/2 top-[105%] lg:top-auto
-                  text-center
+                className={`absolute z-20 pointer-events-none flex flex-col
+                  left-1/2 -translate-x-1/2 top-[102%] w-[320px] items-center text-center
+                  lg:w-[450px]
+                  ${activePolicy.detailSide === 'left' 
+                    ? 'lg:right-[75%] lg:left-auto lg:top-[25%] lg:-translate-y-1/2 lg:translate-x-0 lg:pr-[140px] lg:items-end lg:text-right' 
+                    : ''}
+                  ${activePolicy.detailSide === 'right' 
+                    ? 'lg:left-[75%] lg:top-[25%] lg:-translate-y-1/2 lg:translate-x-0 lg:pl-[140px] lg:items-start lg:text-left' 
+                    : ''}
+                  ${activePolicy.detailSide === 'bottom' 
+                    ? 'lg:top-[75%] lg:left-[50%] lg:-translate-x-1/2 lg:pt-[130px] lg:items-center lg:text-center' 
+                    : ''}
                 `}
               >
                 <motion.div
                   key={`detail-${hovered}`}
                   initial={{ 
                     opacity: 0, 
-                    x: activePolicy.detailSide === 'left' ? 40 : activePolicy.detailSide === 'right' ? -40 : 0, 
-                    y: activePolicy.detailSide === 'bottom' ? -40 : 20,
+                    scale: 0.8,
+                    x: activePolicy.detailSide === 'left' ? 80 : activePolicy.detailSide === 'right' ? -80 : 0, 
+                    y: activePolicy.detailSide === 'bottom' ? -60 : activePolicy.detailSide === 'left' || activePolicy.detailSide === 'right' ? 0 : 20,
                     filter: 'blur(10px)'
                   }}
-                  animate={{ opacity: 1, x: 0, y: 0, filter: 'blur(0px)' }}
-                  exit={{ opacity: 0, filter: 'blur(10px)', transition: { duration: 0.3 } }}
+                  animate={{ 
+                    opacity: 1, 
+                    scale: 1,
+                    x: 0, 
+                    y: 0, 
+                    filter: 'blur(0px)' 
+                  }}
+                  exit={{ 
+                    opacity: 0, 
+                    scale: 0.9,
+                    filter: 'blur(10px)', 
+                    transition: { duration: 0.3 } 
+                  }}
                   transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+                  className={`flex flex-col w-full
+                    ${activePolicy.detailSide === 'left' ? 'lg:origin-right origin-top' : ''}
+                    ${activePolicy.detailSide === 'right' ? 'lg:origin-left origin-top' : ''}
+                    ${activePolicy.detailSide === 'bottom' ? 'origin-top' : ''}
+                  `}
                 >
-                  <h3 className={`text-white text-lg lg:text-[clamp(1.2rem,2.5vw,2rem)] font-black leading-tight tracking-tight mb-4 whitespace-pre-line ${lang === 'th' ? 'font-anakotmai' : 'font-inter uppercase'}`}>
+                  <h3 className={`text-white text-xl lg:text-3xl xl:text-4xl font-black leading-[1.2] tracking-tight mb-4 whitespace-pre-line drop-shadow-2xl ${lang === 'th' ? 'font-anakotmai' : 'font-inter uppercase'}`}>
                     {lang === 'th' ? activePolicy.detailTh : activePolicy.detailEn}
                   </h3>
 
                   {/* Mobile Tap Indicator */}
-                  <div className="lg:hidden mt-4 text-orange-500 text-[9px] font-black tracking-[0.2em] uppercase animate-pulse">
-                    {lang === 'th' ? 'แตะอีกครั้งเพื่อดูรายละเอียด' : 'Tap again to explore'}
+                  <div className={`lg:hidden mt-4 text-[#FF6B00] text-[10px] font-black tracking-[0.2em] uppercase animate-pulse ${lang === 'th' ? 'font-anakotmai' : 'font-inter'}`}>
+                    {lang === 'th' ? 'แตะอีกครั้งเพื่อสำรวจ' : 'Tap again to explore'}
                   </div>
                 </motion.div>
               </div>
@@ -320,7 +355,9 @@ export default function PoliciesSection({ lang }) {
           className="mt-32 flex flex-col items-center gap-6"
         >
           <div className="w-[1px] h-16 bg-gradient-to-b from-[#FF6B00] to-transparent" />
-          <span className="text-white/20 text-[9px] tracking-[0.6em] font-inter uppercase font-bold">Discover Dimensions</span>
+          <span className={`text-white/20 text-[9px] tracking-[0.6em] uppercase font-bold ${lang === 'th' ? 'font-anakotmai' : 'font-inter'}`}>
+            {lang === 'th' ? 'สำรวจมิติต่างๆ' : 'Discover Dimensions'}
+          </span>
         </motion.div>
       </motion.div>
     </section>

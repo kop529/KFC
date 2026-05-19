@@ -1,11 +1,24 @@
 <!doctype html>
-<html lang="en">
+<html lang="th">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="https://base44.com/logo_v2.svg" />
+    <!-- Preload local fonts — served from same origin, fastest possible -->
+    <link rel="preload" href="/src/assets/fonts/anakotmai-medium.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/src/assets/fonts/anakotmai-bold.woff2" as="font" type="font/woff2" crossorigin />
+    <!-- Prefetch Google Fonts connection only — avoids render-blocking -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!-- Non-blocking Google Fonts (Inter) — media=print trick loads async -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" media="print" onload="this.media='all'" />
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" /></noscript>
+    <!-- Preconnect to Unsplash CDN (used for all images) -->
+    <link rel="preconnect" href="https://images.unsplash.com" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="manifest" href="/manifest.json" />
-    <title>Base44 APP</title>
+    <title>ประชาชลชาย — พรรคเพื่อประชาชน</title>
+    <meta name="description" content="พรรคประชาชลชาย — นโยบายเพื่อประชาชน โปร่งใส ยั่งยืน เพื่ออนาคตที่ดีกว่าของทุกคน" />
+    <meta name="theme-color" content="#111827" />
   </head>
   <body>
     <div id="root"></div>

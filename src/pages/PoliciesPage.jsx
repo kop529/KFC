@@ -1,82 +1,208 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Navbar from '../components/party/Navbar';
-import PoliciesSection from '../components/party/PoliciesSection';
+import PoliciesSection, { policies as allPolicies } from '../components/party/PoliciesSection';
 import Footer from '../components/party/Footer';
-import { motion } from 'framer-motion';
+import { motion, useInView, useMotionValue, useSpring } from 'framer-motion';
 import { 
   Search, ArrowLeft
 } from 'lucide-react';
 
+const EXPO_OUT = [0.16, 1, 0.3, 1];
+
+// ─── Animated Counter for policy count ───
+function useAnimatedCounter(target, duration = 1.2) {
+  const [display, setDisplay] = useState(0);
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true });
+  const hasRun = useRef(false);
+
+  useEffect(() => {
+    if (!inView || hasRun.current) return;
+    hasRun.current = true;
+    const start = performance.now();
+    const tick = (now) => {
+      const p = Math.min((now - start) / (duration * 1000), 1);
+      const eased = p === 1 ? 1 : 1 - Math.pow(2, -10 * p);
+      setDisplay(Math.round(target * eased));
+      if (p < 1) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  }, [inView, target, duration]);
+
+  return { display, ref };
+}
+
 const dimensionsData = {
   economy: {
     th: {
-      title: 'โมเดลเศรษฐกิจใหม่',
-      description: 'สร้างเศรษฐกิจที่เป็นธรรม พัฒนาโครงสร้างพื้นฐานทันสมัย ใช้ดิจิทัลสร้างโอกาส พลิกโฉม SME และทักษะไทย วางยุทธศาสตร์ไทยบนเวทีโลก ดันเศรษฐกิจสร้างสรรค์ และปฏิรูปพลังงานยั่งยืนเพื่อการเติบโต โดยท่านสามารถเข้าไปอ่านชุดนโยบายของพรรคประชาชนได้ที่นี่',
+      title: 'พัฒนาผู้เรียน',
+      description: 'มุ่งเน้นการส่งเสริมการเรียน กิจกรรม และระเบียบวินัย เพื่อยกระดับศักยภาพของนักเรียนในทุกมิติ ทั้งการแชร์ความรู้ เสียงของนักเรียน กิจกรรมสร้างสรรค์ และการปกครองตนเอง',
     },
     en: {
-      title: 'New Economic Model',
-      description: 'Build a fair economy, develop modern infrastructure, use digital tools to create opportunities, transform SMEs and Thai skills, place Thailand on the global stage, push creative economy, and reform sustainable energy for growth.',
+      title: 'Develop Students',
+      description: 'Focus on promoting learning, activities, and discipline to elevate student potential in all dimensions, including knowledge sharing, student voice, creative activities, and self-governance.',
     },
     categories: [
-      { id: 'fair_econ', th: 'เศรษฐกิจที่เป็นธรรม', en: 'Fair Economy', image: 'https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?w=800&q=80' },
-      { id: 'infra', th: 'โครงสร้างพื้นฐานทันสมัย', en: 'Modern Infrastructure', image: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800&q=80' },
-      { id: 'digital_opp', th: 'สร้างโอกาสทางเศรษฐกิจด้วยดิจิทัล', en: 'Digital Opportunity', image: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=800&q=80' },
-      { id: 'sme_skill', th: 'พลิกโฉม SME และเพิ่มทักษะคนไทย', en: 'SME & Skills', image: 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=800&q=80' },
-      { id: 'global_stage', th: 'วางยุทธศาสตร์ไทยบนเวทีโลก', en: 'Global Strategy', image: 'https://images.unsplash.com/photo-1529107386315-e1a2ed48a620?w=800&q=80' },
-      { id: 'creative', th: 'เศรษฐกิจสร้างสรรค์', en: 'Creative Economy', image: 'https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=800&q=80' },
-      { id: 'energy', th: 'พลังงานยั่งยืน', en: 'Sustainable Energy', image: 'https://images.unsplash.com/photo-1466611653911-95081537e5b7?w=800&q=80' }
+      { id: 'share_shine', th: 'Cru Share & Shine', en: 'Cru Share & Shine', image: 'https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?w=800&q=80' },
+      { id: 'student_voice', th: 'Student Voice', en: 'Student Voice', image: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800&q=80' },
+      { id: 'ask_me_anything', th: 'น้องถามพี่ พี่ตอบน้อง', en: 'Ask Me Anything', image: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=800&q=80' },
+      { id: 'weekly_quiz', th: 'คำถามประจำสัปดาห์', en: 'Weekly Quiz', image: 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=800&q=80' },
+      { id: 'exam_broadcast', th: 'เสียงตามสายในวันสอบ', en: 'Exam Broadcast', image: 'https://images.unsplash.com/photo-1529107386315-e1a2ed48a620?w=800&q=80' },
+      { id: 'edu_reels', th: 'คลิป Reels ให้ความรู้', en: 'Educational Reels', image: 'https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=800&q=80' },
+      { id: 'notebook_cover', th: 'ประกวดออกแบบปกสมุด', en: 'Notebook Cover Design', image: 'https://images.unsplash.com/photo-1466611653911-95081537e5b7?w=800&q=80' },
+      { id: 'chill_space', th: 'Chill Space', en: 'Chill Space', image: 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=800&q=80' },
+      { id: 'cae', th: 'CAE', en: 'Chonchai Activity Evolution', image: 'https://images.unsplash.com/photo-1511632765486-a01980e01a18?w=800&q=80' },
+      { id: 'idea_hub', th: 'น้องเสนอ พี่สนอง', en: 'Idea Hub', image: 'https://images.unsplash.com/photo-1506784983877-45594efa4cbe?w=800&q=80' },
+      { id: 'cru_market_space', th: 'Cru Market Space', en: 'Cru Market Space', image: 'https://images.unsplash.com/photo-1533900298318-6b8da08a523e?w=800&q=80' },
+      { id: 'event_calendar', th: 'Event Calendar', en: 'Event Calendar', image: 'https://images.unsplash.com/photo-1506784365847-bbad939e9335?w=800&q=80' },
+      { id: 'one_msg_smile', th: '1 ข้อความ 1 รอยยิ้ม', en: '1 Message 1 Smile', image: 'https://images.unsplash.com/photo-1494178270175-e96de2971df9?w=800&q=80' },
+      { id: 'market_space_2', th: 'Market Space', en: 'Market Space', image: 'https://images.unsplash.com/photo-1472851294608-062f824d29cc?w=800&q=80' },
+      { id: 'csg', th: 'CSG', en: 'Chonchai Smart Governance', image: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=800&q=80' },
+      { id: 'birthday_conn', th: 'เดือนสำคัญแห่งความหมาย', en: 'Birthday Connection', image: 'https://images.unsplash.com/photo-1530103862676-de8892bc952f?w=800&q=80' },
+      { id: 'actilearning', th: 'ActiLearning Hub', en: 'ActiLearning Hub', image: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&q=80' },
+      { id: 'reading_guide', th: 'หน้าไหน น่าอ่าน', en: 'Reading Guide', image: 'https://images.unsplash.com/photo-1506880018603-83d5b814b5a6?w=800&q=80' },
+      { id: 'music_comp', th: 'Music Competition', en: 'Music Competition', image: 'https://images.unsplash.com/photo-1501612780327-45045538702b?w=800&q=80' },
+      { id: 'recycle_runway', th: 'Recycle Runway', en: 'Recycle Runway', image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&q=80' },
+      { id: 'art_music_week', th: 'ศิลป์สร้างฝัน', en: 'Art & Music Week', image: 'https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=800&q=80' },
+      { id: 'open_academic', th: 'CRU Open Academic', en: 'CRU Open Academic', image: 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=800&q=80' },
+      { id: 'club_synergy', th: 'เปิดโลกกิจกรรมกับกลุ่มสาระ', en: 'Club Synergy', image: 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=800&q=80' },
+      { id: 'creative_signage', th: 'มานี่ พี่บอกให้', en: 'Creative Signage', image: 'https://images.unsplash.com/photo-1497215848122-331bedaf2145?w=800&q=80' },
+      { id: 'yellow_card', th: 'ขั้นบันได แห่งความหวัง', en: 'Yellow Card System', image: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=800&q=80' },
+      { id: 'point_recovery', th: 'ประชาสัมพันธ์กิจกรรมเพิ่มคะแนน', en: 'Point Recovery', image: 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=800&q=80' }
     ]
   },
   security: {
     th: {
-      title: 'ประชาธิปไตยและความมั่นคงใหม่',
-      description: 'ทำให้กองทัพทันสมัย ปฏิรูปกระบวนการยุติธรรมที่เป็นธรรม วางนโยบายความมั่นคงใหม่ที่ตอบโจทย์โลกยุคปัจจุบัน และสร้างประชาธิปไตยที่อำนาจสูงสุดเป็นของประชาชนอย่างแท้จริง',
+      title: 'พัฒนาสังคม',
+      description: 'เน้นการทำสาธารณะประโยชน์และนโยบายเพื่อชุมชน สร้างสรรค์สังคมที่เกื้อกูล ปลอดภัย และดูแลสุขภาพกายและใจของทุกคน',
     },
     en: {
-      title: 'Democracy & Security',
-      description: 'Modernize the military, reform the justice system, establish modern security frameworks for the contemporary world, and secure true democratic power for the people.',
+      title: 'Develop Society',
+      description: 'Emphasize public service and community policies, creating a supportive, safe society, and caring for the physical and mental health of everyone.',
     },
     categories: [
-      { id: 'military', th: 'กองทัพทันสมัย', en: 'Modern Military', image: 'https://images.unsplash.com/photo-1508672019048-805c876b67e2?w=800&q=80' },
-      { id: 'justice', th: 'ปฏิรูปกระบวนการยุติธรรม', en: 'Reform Justice', image: 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=800&q=80' },
-      { id: 'newsec', th: 'ความมั่นคงใหม่', en: 'New Security', image: 'https://images.unsplash.com/photo-1563986768609-322da13575f3?w=800&q=80' },
-      { id: 'democracy', th: 'ประชาธิปไตยแท้จริง', en: 'True Democracy', image: 'https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=800&q=80' }
+      { id: 'shared_cabinet', th: 'หนูลืมหรอพี่มีให้ (ตู้ปันสุข ชรอ.)', en: 'Shared Cabinet', image: 'https://images.unsplash.com/photo-1508672019048-805c876b67e2?w=800&q=80' },
+      { id: 'sch', th: 'SCH', en: 'SchoolCare Hub', image: 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=800&q=80' },
+      { id: 'smart_canteen', th: 'โรงอาหารสะอาด หลากหลายด้วยปลายนิ้ว', en: 'Smart Canteen', image: 'https://images.unsplash.com/photo-1563986768609-322da13575f3?w=800&q=80' },
+      { id: 'teacher_dir', th: 'Platform ช่องทางการติดต่อ ห้องพักครู', en: 'Teacher Directory Platform', image: 'https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=800&q=80' },
+      { id: 'napkin_wrap', th: 'กระดาษห่อผ้าอนามัย', en: 'Sanitary Napkin Wrapper', image: 'https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=800&q=80' },
+      { id: 'first_aid', th: 'First Aid Station', en: 'First Aid Station', image: 'https://images.unsplash.com/photo-1473448912268-2022ce9509d8?w=800&q=80' },
+      { id: 'water_qc', th: 'ความสะอาดตู้กดน้ำ', en: 'Water Dispenser QC', image: 'https://images.unsplash.com/photo-1505751172876-fa1923c5c528?w=800&q=80' },
+      { id: 'c_to_c', th: 'C to C', en: 'CRU to CRU', image: 'https://images.unsplash.com/photo-1427504494785-3a9ca7044f45?w=800&q=80' },
+      { id: 'lost_found', th: 'Lost & Found', en: 'Lost & Found', image: 'https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?w=800&q=80' },
+      { id: 'cru_now', th: 'CRU NOW', en: 'CRU NOW Digital Signage', image: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800&q=80' },
+      { id: 'happy_toilet', th: 'คืนสุขา สู่ความสุข', en: 'Happy Toilet', image: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=800&q=80' },
+      { id: 'double_a', th: 'Double A Fastprint', en: 'Fastprint Service', image: 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=800&q=80' },
+      { id: 'music_room', th: 'ห้องซ้อมดนตรี', en: 'Music Rehearsal Room', image: 'https://images.unsplash.com/photo-1529107386315-e1a2ed48a620?w=800&q=80' },
+      { id: 'mental_health', th: 'เด็กมันคิดเยอะ', en: 'Mental Health Counselors', image: 'https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=800&q=80' },
+      { id: 'umbrella_exchange', th: 'บัตรแลกร่ม', en: 'Umbrella Exchange', image: 'https://images.unsplash.com/photo-1466611653911-95081537e5b7?w=800&q=80' },
+      { id: 'eco_market', th: 'School Eco-Market', en: 'School Eco-Market', image: 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=800&q=80' },
+      { id: 'clear_comm', th: 'ข้อมูลชัดเจน สื่อสารเป็นระบบ', en: 'Clear Communication', image: 'https://images.unsplash.com/photo-1511632765486-a01980e01a18?w=800&q=80' },
+      { id: 'heal_guard', th: 'Chonchai Heal Guard', en: 'Health Guard', image: 'https://images.unsplash.com/photo-1506784983877-45594efa4cbe?w=800&q=80' },
+      { id: 'council_relations', th: 'สภาสานสัมพันธ์', en: 'Council Relations', image: 'https://images.unsplash.com/photo-1533900298318-6b8da08a523e?w=800&q=80' },
+      { id: 'cer', th: 'CER Chonchai Emergency Readiness', en: 'Emergency Readiness', image: 'https://images.unsplash.com/photo-1506784365847-bbad939e9335?w=800&q=80' }
     ]
   },
   quality: {
     th: {
-      title: 'คุณภาพชีวิตที่ดีและเท่าเทียม',
-      description: 'ยกระดับคุณภาพชีวิตด้วยสวัสดิการถ้วนหน้า ดูแลรักษาสิ่งแวดล้อมเพื่อส่งต่อโลกที่น่าอยู่ และพัฒนาคุณภาพระบบสาธารณสุขและการศึกษาให้ทุกคนเข้าถึงได้',
+      title: 'พัฒนาอนาคต',
+      description: 'ให้ความสำคัญกับสิ่งแวดล้อมและการจัดการทรัพยากรอย่างยั่งยืน เพื่อสร้างรากฐานที่ดีให้กับอนาคตของโรงเรียนและสังคม',
     },
     en: {
-      title: 'Quality of Life',
-      description: 'Improve quality of life with universal welfare, protect the environment for a sustainable future, and elevate healthcare and education access for everyone.',
+      title: 'Develop Future',
+      description: 'Focus on the environment and sustainable resource management to build a strong foundation for the future of the school and society.',
     },
     categories: [
-      { id: 'welfare', th: 'รัฐสวัสดิการถ้วนหน้า', en: 'Universal Welfare', image: 'https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=800&q=80' },
-      { id: 'environment', th: 'สิ่งแวดล้อมยั่งยืน', en: 'Sustainable Environment', image: 'https://images.unsplash.com/photo-1473448912268-2022ce9509d8?w=800&q=80' },
-      { id: 'healthcare', th: 'สาธารณสุขเพื่อทุกคน', en: 'Universal Healthcare', image: 'https://images.unsplash.com/photo-1505751172876-fa1923c5c528?w=800&q=80' },
-      { id: 'education', th: 'การศึกษาเพื่ออนาคต', en: 'Future Education', image: 'https://images.unsplash.com/photo-1427504494785-3a9ca7044f45?w=800&q=80' }
+      { id: 'green_school', th: 'Green School', en: 'Green School', image: 'https://images.unsplash.com/photo-1494178270175-e96de2971df9?w=800&q=80' },
+      { id: 'reuse_bank', th: 'CRU Reuse Bank', en: 'CRU Reuse Bank', image: 'https://images.unsplash.com/photo-1472851294608-062f824d29cc?w=800&q=80' },
+      { id: 'parking_mgt', th: 'จัดการที่จอดรถ', en: 'Parking Management', image: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=800&q=80' },
+      { id: 'council_care', th: 'สภาดูแลให้', en: 'Council Care', image: 'https://images.unsplash.com/photo-1530103862676-de8892bc952f?w=800&q=80' },
+      { id: 'recycle_fund', th: 'ขวดนี้พี่ขอ', en: 'Recycle Fund', image: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&q=80' }
     ]
   }
 };
 
-function PolicyCard({ category, lang, index }) {
+function PolicyCounter({ count, lang }) {
+  const { display, ref } = useAnimatedCounter(count, 1.5);
+  return (
+    <div ref={ref} className="lg:col-span-3 flex flex-col items-center lg:items-end justify-center">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.7, delay: 0.4, ease: EXPO_OUT }}
+        className="text-center lg:text-right"
+      >
+        <span className={`text-[10px] font-black tracking-[0.5em] text-white/20 uppercase mb-2 block ${lang === 'th' ? 'font-anakotmai' : 'font-inter'}`}>
+          {lang === 'th' ? 'ที่มีอยู่' : 'Available'}
+        </span>
+        <div className="flex items-baseline justify-center lg:justify-end gap-2">
+          <span className="text-7xl font-black text-white font-inter tracking-tighter tabular-nums">
+            {display}
+          </span>
+          <span className={`text-[#FF6B00] text-sm font-black uppercase ${lang === 'th' ? 'font-anakotmai' : 'font-inter'}`}>
+            {lang === 'th' ? 'นโยบาย' : 'Policies'}
+          </span>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
+function PolicyCard({ category, lang, index, totalCols = 5 }) {
+  const cardRef = useRef(null);
+  const rotateX = useMotionValue(0);
+  const rotateY = useMotionValue(0);
+  const springRotateX = useSpring(rotateX, { stiffness: 200, damping: 20 });
+  const springRotateY = useSpring(rotateY, { stiffness: 200, damping: 20 });
+
+  const handleMouseMove = useCallback((e) => {
+    if (!cardRef.current) return;
+    const rect = cardRef.current.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    const x = (e.clientX - centerX) / (rect.width / 2);
+    const y = (e.clientY - centerY) / (rect.height / 2);
+    rotateX.set(-y * 6); // tilt toward cursor
+    rotateY.set(x * 6);
+  }, [rotateX, rotateY]);
+
+  const handleMouseLeave = useCallback(() => {
+    rotateX.set(0);
+    rotateY.set(0);
+  }, [rotateX, rotateY]);
+
+  // Diagonal waterfall: delay based on row + col position
+  const row = Math.floor(index / totalCols);
+  const col = index % totalCols;
+  const diagonalDelay = (row + col) * 0.06 + 0.1;
+
   return (
     <motion.div
-      initial={{ opacity: 0, y: 30 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6, delay: index * 0.05, ease: [0.16, 1, 0.3, 1] }}
-      whileHover={{ y: -10 }}
-      className="group relative bg-[#111827] rounded-3xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.4)] flex flex-col h-[400px] cursor-pointer border border-white/5"
+      ref={cardRef}
+      initial={{ opacity: 0, y: 50, scale: 0.92 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ duration: 0.7, delay: diagonalDelay, ease: EXPO_OUT }}
+      style={{
+        rotateX: springRotateX,
+        rotateY: springRotateY,
+        transformPerspective: 800,
+      }}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      whileHover={{ y: -12 }}
+      className="group relative bg-[#111827] rounded-3xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.4)] flex flex-col h-[400px] cursor-pointer border border-white/5 will-change-transform"
     >
-      {/* Visual Header */}
+      {/* Visual Header with parallax image */}
       <div className="relative flex-grow overflow-hidden">
-        <img 
+        <motion.img 
           src={category.image} 
           alt="" 
-          className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110 opacity-80 group-hover:opacity-100"
+          loading="lazy"
+          decoding="async"
+          className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity duration-500"
+          whileHover={{ scale: 1.1 }}
+          transition={{ duration: 0.8, ease: EXPO_OUT }}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-[#111827] via-[#111827]/20 to-transparent opacity-90" />
       </div>
@@ -88,7 +214,12 @@ function PolicyCard({ category, lang, index }) {
         </h3>
       </div>
 
-      {/* Hidden Stack Decoration - Replicating the 'Fan' effect from reference */}
+      {/* Hover glow border */}
+      <motion.div
+        className="absolute inset-0 rounded-3xl border-2 border-[#FF6B00] opacity-0 group-hover:opacity-30 transition-opacity duration-500 pointer-events-none"
+      />
+
+      {/* Stack decoration */}
       <div className="absolute -z-10 inset-0 bg-white/5 rounded-3xl translate-x-2 translate-y-2 rotate-2 opacity-50 border border-white/10" />
       <div className="absolute -z-20 inset-0 bg-white/10 rounded-3xl translate-x-4 translate-y-4 rotate-6 opacity-30 border border-white/10" />
     </motion.div>
@@ -105,22 +236,56 @@ export default function PoliciesPage({ lang, setLang }) {
   }, [id]);
 
   const activeDimension = dimensionsData[id];
+  const activePolicyData = allPolicies.find(p => p.id === id);
+
+  const filteredCategories = activeDimension?.categories.filter(cat => {
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      cat.th.toLowerCase().includes(searchLower) ||
+      cat.en.toLowerCase().includes(searchLower)
+    );
+  }) || [];
 
   if (!activeDimension) {
     return (
-      <div className="min-h-screen bg-[#0B0F17] flex flex-col font-sans">
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0, transition: { duration: 0.3 } }}
+        className="min-h-screen bg-[#0B0F17] flex flex-col font-sans"
+      >
         <Navbar lang={lang} setLang={setLang} theme="dark" />
         <PoliciesSection lang={lang} />
-      </div>
+      </motion.div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#0B0F17] text-white flex flex-col font-sans selection:bg-[#FF6B00] selection:text-white">
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0, transition: { duration: 0.3 } }}
+      className="min-h-screen bg-[#0B0F17] text-white flex flex-col font-sans selection:bg-[#FF6B00] selection:text-white"
+    >
       <Navbar lang={lang} setLang={setLang} theme="dark" />
       
-      <main className="pt-32 lg:pt-48 pb-40 flex-grow">
-        <div className="max-w-7xl mx-auto px-6 lg:px-12">
+      <main className="pt-32 lg:pt-48 pb-40 flex-grow relative z-10">
+        
+        {/* Shared Background Image Transition */}
+        {activePolicyData && (
+          <motion.div
+            layoutId={`policy-bg-${id}`}
+            className="absolute inset-0 z-0 h-[50vh] lg:h-[70vh] overflow-hidden pointer-events-none"
+            initial={{ opacity: 1 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <img src={activePolicyData.image} className="w-full h-full object-cover opacity-20" alt="" />
+            <div className="absolute inset-0 bg-gradient-to-b from-[#0B0F17]/50 via-transparent to-[#0B0F17]" />
+          </motion.div>
+        )}
+
+        <div className="max-w-7xl mx-auto px-6 lg:px-12 relative z-10">
           
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -158,37 +323,39 @@ export default function PoliciesPage({ lang, setLang }) {
               </div>
             </div>
 
-            {/* Editorial Headline */}
+            {/* Editorial Headline — clip-mask reveal */}
             <div className="grid lg:grid-cols-12 gap-12 lg:gap-24 mb-32 items-start">
               <div className="lg:col-span-9">
-                <h1 className={`text-5xl lg:text-8xl font-black text-white leading-[0.9] tracking-tighter mb-12 ${
-                  lang === 'th' ? 'font-anakotmai' : 'font-inter uppercase'
-                }`}>
-                  {lang === 'th' ? activeDimension.th.title : activeDimension.en.title}
-                </h1>
-                <p className={`text-white/50 text-xl lg:text-2xl leading-relaxed max-w-5xl ${
-                  lang === 'th' ? 'font-anakotmai' : 'font-inter font-light'
-                }`}>
+                <div className="overflow-hidden mb-12">
+                  <motion.h1
+                    initial={{ y: '100%' }}
+                    animate={{ y: 0 }}
+                    transition={{ duration: 0.9, delay: 0.1, ease: EXPO_OUT }}
+                    className={`text-5xl lg:text-8xl font-black text-white leading-[0.9] tracking-tighter ${
+                      lang === 'th' ? 'font-anakotmai' : 'font-inter uppercase'
+                    }`}
+                  >
+                    {lang === 'th' ? activeDimension.th.title : activeDimension.en.title}
+                  </motion.h1>
+                </div>
+                <motion.p
+                  initial={{ opacity: 0, y: 20, filter: 'blur(8px)' }}
+                  animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                  transition={{ duration: 0.8, delay: 0.3, ease: EXPO_OUT }}
+                  className={`text-white/50 text-xl lg:text-2xl leading-relaxed max-w-5xl ${
+                    lang === 'th' ? 'font-anakotmai' : 'font-inter font-light'
+                  }`}
+                >
                   {lang === 'th' ? activeDimension.th.description : activeDimension.en.description}
-                </p>
+                </motion.p>
               </div>
               
-              <div className="lg:col-span-3 flex flex-col items-center lg:items-end justify-center">
-                <div className="text-center lg:text-right">
-                  <span className="text-[10px] font-black tracking-[0.5em] text-white/20 uppercase mb-2 block">Available</span>
-                  <div className="flex items-baseline justify-center lg:justify-end gap-2">
-                    <span className="text-7xl font-black text-white font-inter tracking-tighter">
-                      {activeDimension.categories.length * 8}
-                    </span>
-                    <span className="text-[#FF6B00] text-sm font-black font-inter uppercase">Policies</span>
-                  </div>
-                </div>
-              </div>
+              <PolicyCounter count={filteredCategories.length} lang={lang} />
             </div>
 
             {/* Cinematic Card Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-8 lg:gap-10">
-               {activeDimension.categories.map((cat, idx) => (
+               {filteredCategories.map((cat, idx) => (
                  <PolicyCard key={cat.id} category={cat} lang={lang} index={idx} />
                ))}
             </div>
@@ -198,6 +365,6 @@ export default function PoliciesPage({ lang, setLang }) {
       </main>
 
       <Footer lang={lang} />
-    </div>
+    </motion.div>
   );
 }
