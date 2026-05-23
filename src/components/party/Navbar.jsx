@@ -175,12 +175,13 @@ export default function Navbar({ lang, setLang, theme = 'light' }) {
                     {lang === 'th' ? link.th : link.en}
                   </span>
 
-                  {/* Sliding active indicator with layoutId */}
+                  {/* Static active indicator (fade in) */}
                   {isActive && (
                     <motion.span
-                      layoutId="nav-active-indicator"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.2 }}
                       className="absolute -bottom-1 left-0 right-0 h-0.5 bg-[#FF6B00]"
-                      transition={{ type: 'spring', stiffness: 350, damping: 30 }}
                     />
                   )}
 
@@ -207,9 +208,10 @@ export default function Navbar({ lang, setLang, theme = 'light' }) {
                 EN
                 {lang === 'en' && (
                   <motion.span
-                    layoutId="lang-indicator"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.2 }}
                     className="absolute bottom-0 left-0 right-0 h-[2px] bg-[#FF6B00]"
-                    transition={{ type: 'spring', stiffness: 350, damping: 30 }}
                   />
                 )}
               </button>
@@ -224,9 +226,10 @@ export default function Navbar({ lang, setLang, theme = 'light' }) {
                 TH
                 {lang === 'th' && (
                   <motion.span
-                    layoutId="lang-indicator"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.2 }}
                     className="absolute bottom-0 left-0 right-0 h-[2px] bg-[#FF6B00]"
-                    transition={{ type: 'spring', stiffness: 350, damping: 30 }}
                   />
                 )}
               </button>

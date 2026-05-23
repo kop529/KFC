@@ -51,7 +51,7 @@ function App() {
 
   return (
     <QueryClientProvider client={queryClientInstance}>
-      <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+      <Router>
         <div className="min-h-screen bg-[#0B0F17]">
           <AnimatedRoutes lang={lang} setLang={setLang} />
         </div>
