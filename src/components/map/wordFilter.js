@@ -1,6 +1,12 @@
-export function filterText(text) {
-  const banned = ['เหี้ย', 'ควาย', 'สัตว์', 'ไอ้', 'อี', 'มึง', 'กู', 'ควย', 'สัส'];
-  const found = banned.filter(w => text.includes(w));
-  if (found.length > 0) return { ok: false, cleaned: text };
-  return { ok: true, cleaned: text.trim() };
-}
+export const filterText = (text) => {
+  if (!text) return { ok: true, cleaned: '' };
+  
+  const bannedWords = ['เหี้ย', 'ควาย', 'สัตว์', 'ไอ้', 'อี', 'มึง', 'กู'];
+  const hasProfanity = bannedWords.some(word => text.includes(word));
+  
+  if (hasProfanity) {
+    return { ok: false, cleaned: text };
+  }
+  
+  return { ok: true, cleaned: text.trim().substring(0, 300) };
+};

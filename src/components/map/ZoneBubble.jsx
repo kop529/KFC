@@ -22,8 +22,8 @@ export default function ZoneBubble({ zone, count, onClick }) {
       className="cursor-pointer"
     >
       <circle cx={cx} cy={cy} r="18" fill="#1E3A5F" stroke="#63B3ED" strokeWidth="2" />
-      <motion.circle 
-        cx={cx} cy={cy} r="22" 
+      <motion.circle
+        cx={cx} cy={cy} r="22"
         fill="none" stroke="#63B3ED" strokeWidth="1"
         animate={{ scale: [1, 1.4, 1], opacity: [0.8, 0, 0.8] }}
         transition={{ duration: 2, repeat: Infinity }}

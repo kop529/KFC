@@ -13,7 +13,9 @@ export default function LeadershipPage({ lang, setLang }) {
       className="min-h-screen bg-[#0B0F17] flex flex-col text-white"
     >
       <Navbar lang={lang} setLang={setLang} theme="dark" />
-      <LeadershipSection lang={lang} />
+      <div className="pt-20 lg:pt-24">
+        <LeadershipSection lang={lang} />
+      </div>
       <MembersSection lang={lang} />
       <Footer lang={lang} />
     </motion.div>

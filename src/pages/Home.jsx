@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
 import Navbar from '../components/party/Navbar';
 import HeroSection from '../components/party/HeroSection';
-import AboutSection from '../components/party/AboutSection';
+
 import PoliciesSection from '../components/party/PoliciesSection';
 import LeadershipSection from '../components/party/LeadershipSection';
 import Footer from '../components/party/Footer';
@@ -18,7 +18,7 @@ export default function Home({ lang, setLang }) {
       <WelcomeModal lang={lang} />
       <Navbar lang={lang} setLang={setLang} />
       <HeroSection lang={lang} />
-      <AboutSection lang={lang} />
+
       <PoliciesSection lang={lang} />
       <LeadershipSection lang={lang} />
       <Footer lang={lang} />

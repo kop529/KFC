@@ -1,87 +1,23 @@
 import { useEffect, useRef, useCallback } from 'react';
-import { motion, useScroll, useTransform, useSpring, useMotionValue } from 'framer-motion';
-import { ArrowDown } from 'lucide-react';
 
 const copy = {
   en: {
-    tagline: 'For the People,',
-    tagline2: 'By the People.',
-    sub: 'A new era of transparent governance, democratic reform, and sustainable progress for every Thai citizen.',
-    cta: 'Explore Our Vision',
-    label: 'People\'s Party — Thailand',
-    scroll: 'Scroll',
+    tagline: '',
+    tagline2: '',
+    sub: '',
+    cta: '',
+    label: '',
+    scroll: '',
   },
   th: {
-    tagline: 'เพื่อประชาชน,',
-    tagline2: 'โดยประชาชน.',
-    sub: 'ยุคใหม่ของการปกครองที่โปร่งใส การปฏิรูปประชาธิปไตย และความก้าวหน้าที่ยั่งยืนสำหรับทุกคน',
-    cta: 'สำรวจวิสัยทัศน์ของเรา',
-    label: 'พรรคประชาชน — ประเทศไทย',
-    scroll: 'เลื่อนลง',
+    tagline: '',
+    tagline2: '',
+    sub: '',
+    cta: '',
+    label: '',
+    scroll: '',
   }
 };
-
-// ─── Easing presets ───
-const EXPO_OUT = [0.16, 1, 0.3, 1];
-
-// ─── Stagger orchestration ───
-const stagger = {
-  container: {
-    hidden: {},
-    visible: { transition: { staggerChildren: 0.12, delayChildren: 0.3 } }
-  },
-  clipUp: {
-    hidden: { clipPath: 'inset(100% 0 0 0)', y: 40, opacity: 0 },
-    visible: {
-      clipPath: 'inset(0% 0 0 0)', y: 0, opacity: 1,
-      transition: { duration: 0.9, ease: EXPO_OUT }
-    }
-  },
-  blurIn: {
-    hidden: { opacity: 0, filter: 'blur(12px)', y: 16 },
-    visible: {
-      opacity: 1, filter: 'blur(0px)', y: 0,
-      transition: { duration: 1, ease: EXPO_OUT, delay: 0.6 }
-    }
-  },
-  ctaRise: {
-    hidden: { opacity: 0, y: 30, scale: 0.95 },
-    visible: {
-      opacity: 1, y: 0, scale: 1,
-      transition: { type: 'spring', stiffness: 200, damping: 20, delay: 0.85 }
-    }
-  },
-  labelFade: {
-    hidden: { opacity: 0 },
-    visible: { opacity: 1, transition: { duration: 1, delay: 1.3, ease: EXPO_OUT } }
-  }
-};
-
-// ─── Magnetic Button Hook ───
-function useMagneticHover(strength = 0.3) {
-  const x = useMotionValue(0);
-  const y = useMotionValue(0);
-  const ref = useRef(null);
-
-  const handleMouse = useCallback((e) => {
-    if (!ref.current) return;
-    const rect = ref.current.getBoundingClientRect();
-    const centerX = rect.left + rect.width / 2;
-    const centerY = rect.top + rect.height / 2;
-    x.set((e.clientX - centerX) * strength);
-    y.set((e.clientY - centerY) * strength);
-  }, [x, y, strength]);
-
-  const handleLeave = useCallback(() => {
-    x.set(0);
-    y.set(0);
-  }, [x, y]);
-
-  const springX = useSpring(x, { stiffness: 300, damping: 20 });
-  const springY = useSpring(y, { stiffness: 300, damping: 20 });
-
-  return { ref, springX, springY, handleMouse, handleLeave };
-}
 
 // ─── Canvas Arrow Field ───
 // Single <canvas> replaces ~400 DOM nodes. RAF loop draws all arrows in one
@@ -148,15 +84,15 @@ function ArrowCanvas({ heroRef }) {
     // Result: centred at origin, pointing right, same proportions as original
     const SC = 1.417; // scale factor: 34px display / 24px viewBox
     const arrowPath = new Path2D();
-    arrowPath.moveTo(  0          * SC, -8    * SC); // M12,4   → (0,-8)
-    arrowPath.lineTo( -1.41       * SC, -6.59 * SC); // l-1.41,1.41 → (10.59,5.41)
-    arrowPath.lineTo(  4.17       * SC, -1    * SC); // L16.17,11
-    arrowPath.lineTo( -8          * SC, -1    * SC); // H4
-    arrowPath.lineTo( -8          * SC,  1    * SC); // v2
-    arrowPath.lineTo(  4.17       * SC,  1    * SC); // h12.17
-    arrowPath.lineTo( -1.41       * SC,  6.59 * SC); // l-5.58,5.59
-    arrowPath.lineTo(  0          * SC,  8    * SC); // L12,20
-    arrowPath.lineTo(  8          * SC,  0        ); // l8,-8  → tip (8,0)
+    arrowPath.moveTo(0 * SC, -8 * SC); // M12,4   → (0,-8)
+    arrowPath.lineTo(-1.41 * SC, -6.59 * SC); // l-1.41,1.41 → (10.59,5.41)
+    arrowPath.lineTo(4.17 * SC, -1 * SC); // L16.17,11
+    arrowPath.lineTo(-8 * SC, -1 * SC); // H4
+    arrowPath.lineTo(-8 * SC, 1 * SC); // v2
+    arrowPath.lineTo(4.17 * SC, 1 * SC); // h12.17
+    arrowPath.lineTo(-1.41 * SC, 6.59 * SC); // l-5.58,5.59
+    arrowPath.lineTo(0 * SC, 8 * SC); // L12,20
+    arrowPath.lineTo(8 * SC, 0); // l8,-8  → tip (8,0)
     arrowPath.closePath();                            // z → back to (0,-8)
 
     // ── RAF render loop ──
@@ -219,18 +155,6 @@ function ArrowCanvas({ heroRef }) {
 
 export default function HeroSection({ lang }) {
   const heroRef = useRef(null);
-  const c = copy[lang];
-
-  // Scroll-driven progress bar
-  const { scrollYProgress } = useScroll({
-    target: heroRef,
-    offset: ['start start', 'end start']
-  });
-  const progressWidth = useTransform(scrollYProgress, [0, 1], ['0%', '100%']);
-  const springProgress = useSpring(progressWidth, { stiffness: 100, damping: 30 });
-
-  // Magnetic CTA
-  const magnetic = useMagneticHover(0.25);
 
   return (
     <section
@@ -242,136 +166,6 @@ export default function HeroSection({ lang }) {
       <ArrowCanvas heroRef={heroRef} />
 
       <div className="absolute inset-0 bg-gradient-to-b from-[#111827]/60 via-[#111827]/20 to-[#111827]" />
-
-      {/* Scroll-tracking amber progress line */}
-      <motion.div
-        className="absolute top-0 left-0 h-[2px] bg-[#FF6B00] origin-left will-change-transform z-20"
-        style={{ width: springProgress }}
-      />
-
-      {/* Section label */}
-      <motion.div
-        className="absolute top-24 right-6 lg:right-12 text-right"
-        initial={{ opacity: 0, x: 20 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 1, delay: 1.4, ease: EXPO_OUT }}
-      >
-        <div className="text-[10px] tracking-[0.25em] text-white/30 font-inter uppercase">
-          {lang === 'th' ? 'หน้าหลัก' : 'Home'} / 001
-        </div>
-      </motion.div>
-
-      {/* Hero Content — Orchestrated Entrance */}
-      <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-12 pb-24 lg:pb-32 pt-32">
-        <motion.div
-          variants={stagger.container}
-          initial="hidden"
-          animate="visible"
-          className="will-change-transform"
-        >
-          {/* Staggered headline with clip-mask reveal */}
-          <div className="relative mb-8">
-            {/* Ghost shadow layer */}
-            <motion.div
-              variants={stagger.clipUp}
-              className="absolute -top-2 left-1 font-anakotmai font-bold text-white/20 leading-none select-none"
-              style={{ fontSize: 'clamp(2.5rem, 8vw, 6rem)' }}
-            >
-              {c.tagline}<br />{c.tagline2}
-            </motion.div>
-
-            {/* Foreground headline — each line reveals separately */}
-            <div
-              className={`relative font-black text-white leading-none ${lang === 'th' ? 'font-anakotmai' : 'font-inter'}`}
-              style={{ fontSize: 'clamp(2.5rem, 8vw, 6rem)', letterSpacing: '-0.03em' }}
-            >
-              <motion.div variants={stagger.clipUp} className="overflow-hidden">
-                <motion.h1 variants={stagger.clipUp} className="leading-none">
-                  {c.tagline}
-                </motion.h1>
-              </motion.div>
-              <motion.div variants={stagger.clipUp} className="overflow-hidden">
-                <motion.span variants={stagger.clipUp} className="text-[#FF6B00] block leading-none">
-                  {c.tagline2}
-                </motion.span>
-              </motion.div>
-            </div>
-          </div>
-
-          {/* Sub text — blur-in */}
-          <motion.p
-            variants={stagger.blurIn}
-            className={`max-w-xl text-white/60 text-lg leading-relaxed mb-10 ${
-              lang === 'th' ? 'font-anakotmai' : 'font-inter'
-            }`}
-          >
-            {c.sub}
-          </motion.p>
-
-          {/* CTA — Magnetic + Spring */}
-          <motion.div variants={stagger.ctaRise}>
-            <motion.button
-              ref={magnetic.ref}
-              onMouseMove={magnetic.handleMouse}
-              onMouseLeave={magnetic.handleLeave}
-              style={{ x: magnetic.springX, y: magnetic.springY }}
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.97 }}
-              transition={{ type: "spring", stiffness: 400, damping: 17 }}
-              onClick={() => document.querySelector('#about')?.scrollIntoView({ behavior: 'smooth' })}
-              className="group inline-flex items-center gap-3 bg-[#FF6B00] text-[#111827] font-inter font-semibold text-sm tracking-wide px-8 py-4 transition-colors duration-300 hover:bg-white btn-ripple focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF6B00] focus-visible:ring-offset-2 focus-visible:ring-offset-[#111827]"
-            >
-              {lang === 'th' ? <span className="font-anakotmai">{c.cta}</span> : c.cta}
-              <motion.div
-                animate={{ y: [0, 4, 0] }}
-                transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
-              >
-                <ArrowDown size={16} />
-              </motion.div>
-            </motion.button>
-          </motion.div>
-        </motion.div>
-
-        {/* Bottom label */}
-        <motion.div
-          variants={stagger.labelFade}
-          initial="hidden"
-          animate="visible"
-          className="mt-16 flex items-center gap-4 will-change-opacity"
-        >
-          <motion.div
-            className="w-12 h-px bg-[#FF6B00]"
-            initial={{ scaleX: 0 }}
-            animate={{ scaleX: 1 }}
-            transition={{ duration: 1, delay: 1.5, ease: EXPO_OUT }}
-            style={{ originX: 0 }}
-          />
-          <span className="text-xs tracking-[0.2em] text-white/30 font-inter uppercase">
-            {c.label}
-          </span>
-        </motion.div>
-      </div>
-
-      {/* Scroll indicator — breathing animation */}
-      <motion.div
-        className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2"
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 1.8, duration: 0.8, ease: EXPO_OUT }}
-      >
-        <motion.div
-          className="w-[1px] h-16 bg-gradient-to-b from-transparent via-[#FF6B00] to-transparent"
-          animate={{ scaleY: [1, 0.4, 1], opacity: [0.6, 1, 0.6] }}
-          transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
-        />
-        <motion.span
-          className={`text-white/15 text-[8px] tracking-[0.5em] uppercase ${lang === 'th' ? 'font-anakotmai' : 'font-inter'}`}
-          animate={{ opacity: [0.3, 0.6, 0.3] }}
-          transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
-        >
-          {c.scroll}
-        </motion.span>
-      </motion.div>
     </section>
   );
 }

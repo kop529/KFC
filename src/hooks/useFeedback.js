@@ -1,12 +1,41 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
+import { v4 as uuidv4 } from 'uuid';
 
 export function useFeedback() {
   const [feedback, setFeedback] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isOnCooldown, setIsOnCooldown] = useState(false);
+  const [upvotedIds, setUpvotedIds] = useState(new Set());
+  const COOLDOWN_MS = 60 * 1000; // 60 seconds
 
-  // Fetch all feedback on mount
+  // Initialize and manage cooldown timer
+  useEffect(() => {
+    const last = parseInt(localStorage.getItem('last_feedback_time') || '0', 10);
+    const remaining = COOLDOWN_MS - (Date.now() - last);
+    if (remaining > 0) {
+      setIsOnCooldown(true);
+      const timer = setTimeout(() => setIsOnCooldown(false), remaining);
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
+  useEffect(() => {
+    try {
+      const storedUpvotes = localStorage.getItem('upvoted_feedback_ids');
+      if (storedUpvotes) {
+        setUpvotedIds(new Set(JSON.parse(storedUpvotes)));
+      }
+    } catch (err) {
+      console.error('[useFeedback] error loading upvotes:', err);
+    }
+  }, []);
+
   const fetchFeedback = useCallback(async () => {
+    if (!supabase) {
+      setIsLoading(false);
+      return;
+    }
     setIsLoading(true);
     try {
       const { data, error } = await supabase
@@ -15,90 +44,132 @@ export function useFeedback() {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Error fetching feedback:', error);
+        console.error('[useFeedback] fetch error:', error.message);
         return;
       }
 
       if (data) {
-        // Map snake_case from DB to camelCase for the frontend
-        const formattedData = data.map(item => ({
+        setFeedback(data.map(item => ({
           id: item.id,
           zoneId: item.zone_id,
           category: item.category,
           text: item.text,
           timestamp: item.created_at,
-          upvotes: item.upvotes || 0
-        }));
-        setFeedback(formattedData);
+          upvotes: item.upvotes || 0,
+        })));
       }
     } catch (err) {
-      console.error('Unexpected error fetching feedback:', err);
+      console.error('[useFeedback] unexpected error:', err);
     } finally {
       setIsLoading(false);
     }
   }, []);
 
-  useEffect(() => {
-    // Only fetch if Supabase is configured
-    if (import.meta.env.VITE_SUPABASE_URL) {
-      fetchFeedback();
-    } else {
-      console.warn("Supabase credentials missing. Feedback will not load.");
-      setIsLoading(false);
-    }
-  }, [fetchFeedback]);
+  useEffect(() => { fetchFeedback(); }, [fetchFeedback]);
 
   const addFeedback = async (zoneId, category, text) => {
-    // Optimistic UI update
+    // Spam protection check
+    const last = parseInt(localStorage.getItem('last_feedback_time') || '0', 10);
+    if (Date.now() - last < COOLDOWN_MS) {
+      console.warn('[useFeedback] Spam protection active.');
+      return null;
+    }
+
+    // Length limit validation (Server-side equivalent fallback)
+    if (!text || text.trim().length === 0 || text.length > 300) {
+      console.warn('[useFeedback] Invalid text length.');
+      return null;
+    }
+
+    // Optimistic update — shows immediately in the UI
+    const tempId = uuidv4();
     const newEntry = {
-      id: crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2),
+      id: tempId,
       zoneId,
       category,
       text,
       timestamp: new Date().toISOString(),
-      upvotes: 0
+      upvotes: 0,
     };
-    
     setFeedback(prev => [newEntry, ...prev]);
 
-    if (!import.meta.env.VITE_SUPABASE_URL) return newEntry;
+    if (!supabase) return newEntry; // no DB configured — optimistic only
 
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('school_feedback')
-        .insert([
-          {
-            zone_id: zoneId,
-            category: category,
-            text: text,
-            // created_at is handled by Postgres automatically
-          }
-        ]);
+        .insert([{ zone_id: zoneId, category, text }])
+        .select()
+        .single();
 
       if (error) {
-        console.error('Error saving feedback:', error);
-        // Revert optimistic update on failure
-        setFeedback(prev => prev.filter(f => f.id !== newEntry.id));
+        console.error('[useFeedback] insert error:', error.message);
+        setFeedback(prev => prev.filter(f => f.id !== tempId)); // revert
+        return null;
+      }
+
+      // Replace optimistic entry with real DB row (gets the real UUID + created_at)
+      if (data) {
+        setFeedback(prev => prev.map(f =>
+          f.id === tempId
+            ? { id: data.id, zoneId: data.zone_id, category: data.category, text: data.text, timestamp: data.created_at, upvotes: 0 }
+            : f
+        ));
       }
     } catch (err) {
-      console.error('Unexpected error saving feedback:', err);
-      setFeedback(prev => prev.filter(f => f.id !== newEntry.id));
+      console.error('[useFeedback] unexpected insert error:', err);
+      setFeedback(prev => prev.filter(f => f.id !== tempId));
+      return null;
     }
+
+    // Mark successful submission for cooldown
+    localStorage.setItem('last_feedback_time', Date.now().toString());
+    setIsOnCooldown(true);
+    setTimeout(() => setIsOnCooldown(false), COOLDOWN_MS);
 
     return newEntry;
   };
 
-  const getFeedbackForZone = (zoneId) => {
-    return feedback.filter(f => f.zoneId === zoneId).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-  };
+  const getFeedbackForZone = (zoneId) =>
+    feedback
+      .filter(f => f.zoneId === zoneId)
+      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
   const getZoneCounts = () => {
     const counts = {};
     feedback.forEach(f => {
-      counts[f.zoneId] = (counts[f.zoneId] || 0) + 1;
+      if (f.zoneId && f.zoneId !== 'general') {
+        counts[f.zoneId] = (counts[f.zoneId] || 0) + 1;
+      }
     });
     return counts;
   };
 
-  return { feedback, isLoading, addFeedback, getFeedbackForZone, getZoneCounts };
+  const upvoteFeedback = async (id) => {
+    if (upvotedIds.has(id)) return;
+
+    // Optimistic update
+    setFeedback(prev =>
+      prev.map(f => f.id === id ? { ...f, upvotes: (f.upvotes || 0) + 1 } : f)
+    );
+    
+    setUpvotedIds(prev => {
+      const newSet = new Set([...prev, id]);
+      localStorage.setItem('upvoted_feedback_ids', JSON.stringify(Array.from(newSet)));
+      return newSet;
+    });
+
+    if (!supabase) return;
+
+    try {
+      // Atomic increment via Supabase RPC (see supabase_tutorial.md for the SQL function)
+      const { error } = await supabase.rpc('increment_upvotes', { row_id: id });
+      if (error) console.error('[useFeedback] upvote error:', error.message);
+    } catch (err) {
+      console.error('[useFeedback] upvote error:', err);
+    }
+  };
+
+  return { feedback, isLoading, addFeedback, getFeedbackForZone, getZoneCounts, upvoteFeedback, upvotedIds, isOnCooldown };
+
 }

@@ -12,6 +12,7 @@ import PoliciesPage from '@/pages/PoliciesPage';
 import LeadershipPage from '@/pages/LeadershipPage';
 
 import SchoolMapPage from '@/pages/SchoolMapPage';
+import TeamMembersPage from '@/pages/TeamMembersPage';
 
 function AnimatedRoutes({ lang, setLang }) {
   const location = useLocation();
@@ -24,6 +25,7 @@ function AnimatedRoutes({ lang, setLang }) {
         <Route path="/policies/:id" element={<PoliciesPage lang={lang} setLang={setLang} />} />
         <Route path="/leadership" element={<LeadershipPage lang={lang} setLang={setLang} />} />
         <Route path="/map" element={<SchoolMapPage lang={lang} setLang={setLang} />} />
+        <Route path="/team/:teamId" element={<TeamMembersPage lang={lang} />} />
         <Route path="*" element={<PageNotFound lang={lang} />} />
       </Routes>
     </AnimatePresence>
@@ -32,7 +34,15 @@ function AnimatedRoutes({ lang, setLang }) {
 
 function App() {
   const [lang, setLang] = useState(() => {
-    return localStorage.getItem('app_lang') || 'en';
+    const savedLang = localStorage.getItem('app_lang');
+    if (savedLang) return savedLang;
+
+    // Detect browser/device language (e.g. "th", "th-TH", "en", "en-US")
+    const systemLang = typeof navigator !== 'undefined' ? (navigator.language || navigator.userLanguage) : '';
+    if (systemLang && systemLang.toLowerCase().startsWith('th')) {
+      return 'th';
+    }
+    return 'en';
   });
 
   useEffect(() => {
@@ -41,8 +51,8 @@ function App() {
 
   return (
     <QueryClientProvider client={queryClientInstance}>
-      <Router>
-        <div className="film-grain min-h-screen bg-[#0B0F17]">
+      <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        <div className="min-h-screen bg-[#0B0F17]">
           <AnimatedRoutes lang={lang} setLang={setLang} />
         </div>
       </Router>

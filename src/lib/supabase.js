@@ -1,8 +1,18 @@
 import { createClient } from '@supabase/supabase-js';
 
-// These will be pulled from your Vercel Environment Variables in production,
-// and from your .env.local file during local development.
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://placeholder.supabase.co';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'placeholder';
+// Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in:
+//   Local dev  → .env.local
+//   Production → Vercel dashboard → Settings → Environment Variables
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.warn(
+    '[Supabase] Missing VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY. ' +
+    'Feedback features will be disabled. See docs/supabase-setup.md for instructions.'
+  );
+}
+
+export const supabase = supabaseUrl && supabaseAnonKey
+  ? createClient(supabaseUrl, supabaseAnonKey)
+  : null;

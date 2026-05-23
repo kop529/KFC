@@ -133,14 +133,14 @@ function PolicyCounter({ count, lang }) {
         transition={{ duration: 0.7, delay: 0.4, ease: EXPO_OUT }}
         className="text-center lg:text-right"
       >
-        <span className={`text-[10px] font-black tracking-[0.5em] text-white/20 uppercase mb-2 block ${lang === 'th' ? 'font-anakotmai' : 'font-inter'}`}>
+        <span className={`text-xs lg:text-sm font-bold tracking-[0.1em] text-white/40 uppercase mb-1 block ${lang === 'th' ? 'font-anakotmai' : 'font-inter'}`}>
           {lang === 'th' ? 'ที่มีอยู่' : 'Available'}
         </span>
         <div className="flex items-baseline justify-center lg:justify-end gap-2">
           <span className="text-7xl font-black text-white font-inter tracking-tighter tabular-nums">
             {display}
           </span>
-          <span className={`text-[#FF6B00] text-sm font-black uppercase ${lang === 'th' ? 'font-anakotmai' : 'font-inter'}`}>
+          <span className={`text-[#FF6B00] text-lg lg:text-xl font-extrabold uppercase tracking-[0.05em] ${lang === 'th' ? 'font-anakotmai' : 'font-inter'}`}>
             {lang === 'th' ? 'นโยบาย' : 'Policies'}
           </span>
         </div>
@@ -175,7 +175,7 @@ function PolicyCard({ category, lang, index, totalCols = 5 }) {
   // Diagonal waterfall: delay based on row + col position
   const row = Math.floor(index / totalCols);
   const col = index % totalCols;
-  const diagonalDelay = (row + col) * 0.06 + 0.1;
+  const diagonalDelay = Math.min((row + col) * 0.03, 0.3);
 
   return (
     <motion.div
@@ -191,18 +191,16 @@ function PolicyCard({ category, lang, index, totalCols = 5 }) {
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
       whileHover={{ y: -12 }}
-      className="group relative bg-[#111827] rounded-3xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.4)] flex flex-col h-[400px] cursor-pointer border border-white/5 will-change-transform"
+      className="group relative bg-[#111827] rounded-3xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.4)] flex flex-col h-[70vw] max-h-[400px] lg:h-[400px] cursor-pointer border border-white/5 will-change-transform"
     >
       {/* Visual Header with parallax image */}
       <div className="relative flex-grow overflow-hidden">
-        <motion.img 
+        <img 
           src={category.image} 
           alt="" 
           loading="lazy"
           decoding="async"
           className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity duration-500"
-          whileHover={{ scale: 1.1 }}
-          transition={{ duration: 0.8, ease: EXPO_OUT }}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-[#111827] via-[#111827]/20 to-transparent opacity-90" />
       </div>
@@ -256,6 +254,7 @@ export default function PoliciesPage({ lang, setLang }) {
       >
         <Navbar lang={lang} setLang={setLang} theme="dark" />
         <PoliciesSection lang={lang} />
+        <Footer lang={lang} />
       </motion.div>
     );
   }
@@ -274,11 +273,11 @@ export default function PoliciesPage({ lang, setLang }) {
         {/* Shared Background Image Transition */}
         {activePolicyData && (
           <motion.div
-            layoutId={`policy-bg-${id}`}
             className="absolute inset-0 z-0 h-[50vh] lg:h-[70vh] overflow-hidden pointer-events-none"
-            initial={{ opacity: 1 }}
+            initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            transition={{ duration: 0.8 }}
           >
             <img src={activePolicyData.image} className="w-full h-full object-cover opacity-20" alt="" />
             <div className="absolute inset-0 bg-gradient-to-b from-[#0B0F17]/50 via-transparent to-[#0B0F17]" />
@@ -297,13 +296,13 @@ export default function PoliciesPage({ lang, setLang }) {
               <div className="flex items-center gap-4">
                 <button
                   onClick={() => navigate('/policies')}
-                  className="flex items-center gap-3 text-white/40 hover:text-white transition-all duration-300 text-[10px] font-black uppercase tracking-[0.4em] group"
+                  className={`flex items-center gap-3 text-white/50 hover:text-white transition-all duration-300 text-xs lg:text-sm font-bold uppercase tracking-[0.1em] group ${lang === 'th' ? 'font-anakotmai' : 'font-inter'}`}
                 >
                   <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform duration-300" />
                   {lang === 'th' ? 'ย้อนกลับ' : 'Back'}
                 </button>
                 <div className="h-px w-12 bg-white/10" />
-                <span className={`text-[#FF6B00] text-[10px] font-black uppercase tracking-[0.4em] ${lang === 'th' ? 'font-anakotmai' : 'font-inter'}`}>
+                <span className={`text-[#FF6B00] text-xs lg:text-sm font-bold uppercase tracking-[0.1em] ${lang === 'th' ? 'font-anakotmai' : 'font-inter'}`}>
                   {lang === 'th' ? 'นโยบายพรรค' : 'PARTY POLICY'}
                 </span>
               </div>
@@ -339,8 +338,8 @@ export default function PoliciesPage({ lang, setLang }) {
                   </motion.h1>
                 </div>
                 <motion.p
-                  initial={{ opacity: 0, y: 20, filter: 'blur(8px)' }}
-                  animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.8, delay: 0.3, ease: EXPO_OUT }}
                   className={`text-white/50 text-xl lg:text-2xl leading-relaxed max-w-5xl ${
                     lang === 'th' ? 'font-anakotmai' : 'font-inter font-light'

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Search } from 'lucide-react';
+import { Search, X } from 'lucide-react';
 import { ZONES } from './zones.config';
 
 // SEO-like aliases mapping for smarter search
@@ -13,7 +13,7 @@ const normalizeText = (text) => {
     .replace(/ห้องสมุด/g, 'สำนักงาน');
 };
 
-export default function ZoneSidebar({ activeZone, onZoneSelect, zoneCounts }) {
+export default function ZoneSidebar({ activeZone, onZoneSelect, zoneCounts, isMobile, showMobileList, onCloseMobileList }) {
   const [search, setSearch] = useState('');
 
   const sortedZones = [...ZONES]
@@ -25,15 +25,29 @@ export default function ZoneSidebar({ activeZone, onZoneSelect, zoneCounts }) {
     })
     .sort((a, b) => b.count - a.count);
 
+  // Responsive x offset logic for sliding
+  const xOffset = isMobile 
+    ? (showMobileList && !activeZone ? 0 : "-100%") 
+    : (activeZone ? "-100%" : 0);
+
   return (
     <motion.div 
-      className="w-80 bg-[#111827] border-r border-white/10 h-full flex flex-col absolute left-0 top-0 z-20"
-      initial={{ x: -320 }}
-      animate={{ x: activeZone ? -320 : 0 }} // slide out when zone selected
+      className="w-full sm:w-80 bg-[#111827] border-r border-white/10 h-full flex flex-col absolute left-0 top-0 z-20 shadow-2xl sm:shadow-none"
+      initial={{ x: "-100%" }}
+      animate={{ x: xOffset }}
       transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
     >
-      <div className="p-6 border-b border-white/10">
-        <h2 className="text-white font-anakotmai font-bold text-2xl mb-4">แผนที่ปัญหาโรงเรียน</h2>
+      <div className="p-6 border-b border-white/10 relative">
+        {isMobile && (
+          <button 
+            onClick={onCloseMobileList}
+            className="absolute top-6 right-6 p-2 text-white/50 hover:text-white transition-colors"
+            aria-label="Close search list"
+          >
+            <X size={20} />
+          </button>
+        )}
+        <h2 className="text-white font-anakotmai font-bold text-2xl mb-4">เเจ้งปัญหาโรงเรียน</h2>
         <div className="relative">
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40" />
           <input 

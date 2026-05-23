@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { motion, AnimatePresence, useScroll, useTransform, useSpring } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 
 export const policies = [
@@ -11,29 +11,29 @@ export const policies = [
     detailEn: 'Promote Learning,\nCreative Activities,\nPositive Discipline.',
     image: 'https://images.unsplash.com/photo-1535401991746-da3d9055713e?w=1200&q=75&auto=format&fit=crop',
     points: "0,0 200,0 100,173",
-    textPos: { x: 100, y: 44 },
+    textPos: { x: 100, y: 54 },
     detailSide: 'left'
   },
   {
     id: 'security',
     th: 'พัฒนา\nสังคม',
     en: 'Develop\nSociety',
-    detailTh: 'สาธารณะประโยชน์\nนโยบายเพื่อชุมชน\nสังคมที่เกื้อกูล',
-    detailEn: 'Public Service,\nCommunity Policies,\nSupportive Society.',
+    detailTh: 'สาธารณะประโยชน์\nนโยบายเพื่อเราๆ\nชรอ.ที่น่าค้นหา',
+    detailEn: 'Public Service,\nCommunity Policies,\nDiscoverable Society.',
     image: 'https://images.unsplash.com/photo-1555848962-6e79363ec18f?w=1200&q=75&auto=format&fit=crop',
     points: "200,0 400,0 300,173",
-    textPos: { x: 300, y: 44 },
+    textPos: { x: 300, y: 55 },
     detailSide: 'right'
   },
   {
     id: 'quality',
     th: 'พัฒนา\nอนาคต',
     en: 'Develop\nFuture',
-    detailTh: 'โรงเรียนสีเขียว\nจัดการทรัพยากร\nเพื่ออนาคตยั่งยืน',
+    detailTh: 'โรงเรียนรักโลก\nจัดการทรัพยากร\nเพื่ออนาคตที่ยั่งยืน',
     detailEn: 'Green School,\nResource Management,\nSustainable Future.',
     image: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=1200&q=75&auto=format&fit=crop',
     points: "100,173 300,173 200,346",
-    textPos: { x: 200, y: 224 },
+    textPos: { x: 200, y: 230 },
     detailSide: 'bottom'
   }
 ];
@@ -61,22 +61,16 @@ export default function PoliciesSection({ lang }) {
     return () => imgs.forEach(img => { img.src = ''; });
   }, []); // ← empty array = runs once
 
-  const activePolicy = useMemo(() => 
+  const activePolicy = useMemo(() =>
     policies.find(p => p.id === hovered) || policies[0],
     [hovered]
   );
 
-  // 2. Fluidity: Parallax Background
-  const { scrollYProgress } = useScroll();
-  const rawBgY = useTransform(scrollYProgress, [0, 1], ['0%', '10%']);
-  const rawBgScale = useTransform(scrollYProgress, [0, 1], [1.05, 1]);
-  
-  const bgY = useSpring(rawBgY, { stiffness: 100, damping: 30, restDelta: 0.001 });
-  const bgScale = useSpring(rawBgScale, { stiffness: 100, damping: 30, restDelta: 0.001 });
+
 
   const handleInteraction = (id, isClick = false) => {
     const isMobile = window.matchMedia("(max-width: 768px)").matches;
-    
+
     if (isMobile && isClick) {
       if (lastTapped === id) {
         setIsNavigating(true);
@@ -102,8 +96,8 @@ export default function PoliciesSection({ lang }) {
   };
 
   return (
-    <section 
-      className="relative min-h-[100vh] flex items-center justify-center overflow-hidden bg-[#0B0F17] py-28 lg:py-40" 
+    <section
+      className="relative min-h-[100vh] flex items-center justify-center lg:overflow-hidden bg-[#0B0F17] py-28 lg:py-40"
       id="policies"
     >
       {/* Immersive Background Transition with Parallax */}
@@ -111,20 +105,19 @@ export default function PoliciesSection({ lang }) {
         {hovered && (
           <motion.div
             key={hovered}
-            layoutId={`policy-bg-${hovered}`}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.8 }}
-            style={{ y: bgY, scale: bgScale }}
+
             className="absolute inset-0 z-0 origin-center"
           >
-            <img 
-              src={activePolicy.image} 
+            <img
+              src={activePolicy.image}
               loading="lazy"
               decoding="async"
-              className="w-full h-full object-cover" 
-              alt="" 
+              className="w-full h-full object-cover"
+              alt=""
             />
             <div className="absolute inset-0 bg-[#0B0F17]/85 mix-blend-multiply" />
             <div className="absolute inset-0 bg-gradient-to-b from-[#0B0F17] via-transparent to-[#0B0F17]" />
@@ -132,43 +125,30 @@ export default function PoliciesSection({ lang }) {
         )}
       </AnimatePresence>
 
-      <motion.div 
-        animate={{ 
-          y: hovered === 'quality' ? -100 : 0 
+      <motion.div
+        animate={{
+          y: hovered === 'quality' ? -100 : 0
         }}
         transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
         className="relative z-10 w-full max-w-7xl mx-auto px-6 flex flex-col items-center"
       >
-        
+
         {/* Header with tighter Swiss typography */}
-        <motion.div 
+        <motion.div
           animate={{ opacity: (hovered && !isNavigating) ? 0 : 1, y: (hovered && !isNavigating) ? -20 : 0 }}
           className="text-center mb-32"
         >
           <div className={`flex flex-col items-center gap-8 ${lang === 'th' ? 'font-anakotmai' : 'font-inter'}`}>
             <h2 className="text-white text-5xl lg:text-8xl font-black tracking-tighter uppercase leading-none">
-              {lang === 'th' ? 'นโยบาย' : 'Vision'}
+              {lang === 'th' ? 'นโยบาย' : 'POLICIES'}
             </h2>
-            
-            <div className="flex flex-col items-center">
-              <span className="text-white/30 text-[10px] lg:text-xs font-black tracking-[0.5em] uppercase mb-4">
-                CHONCHAI PEOPLE'S
-              </span>
-              <div className="flex items-center text-[#FF6B00] text-sm lg:text-base font-bold">
-                <span className="relative inline-block mr-2">
-                  พรรค
-                  <span className="absolute inset-x-0 top-[55%] h-[2px] bg-[#FF6B00]" />
-                </span>
-                <span>ประชาชลชาย</span>
-              </div>
-            </div>
           </div>
         </motion.div>
 
         {/* The SVG Triangle Grid */}
         <div className="relative w-full max-w-[480px] aspect-[400/346]">
-          <svg 
-            viewBox="0 0 400 346" 
+          <svg
+            viewBox="0 0 400 346"
             className="w-full h-full drop-shadow-2xl"
             xmlns="http://www.w3.org/2000/svg"
           >
@@ -193,8 +173,8 @@ export default function PoliciesSection({ lang }) {
 
             {/* 2. ANIMATED VISUAL LAYER (Moves with Content Lift) */}
             <motion.g
-              animate={{ 
-                y: hovered === 'quality' ? -80 : 0 
+              animate={{
+                y: hovered === 'quality' ? -80 : 0
               }}
               transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
               className="pointer-events-none"
@@ -220,7 +200,7 @@ export default function PoliciesSection({ lang }) {
                 fill="#FF6B00"
                 stroke="#0B0F17"
                 strokeWidth="4"
-                animate={{ 
+                animate={{
                   opacity: hovered ? 0.05 : 1,
                   fill: '#FF6B00'
                 }}
@@ -248,16 +228,15 @@ export default function PoliciesSection({ lang }) {
                       y={centerTriangle.textPos.y}
                       textAnchor="middle"
                       fill="#111827"
-                      className={`font-black pointer-events-none ${
-                        lang === 'th' 
-                          ? 'font-anakotmai text-[17px] lg:text-[18px]' 
+                      className={`font-black pointer-events-none ${lang === 'th'
+                          ? 'font-anakotmai text-[17px] lg:text-[18px]'
                           : 'font-inter text-[13px] lg:text-[14px] tracking-[0.05em] uppercase'
-                      }`}
+                        }`}
                     >
                       {(lang === 'th' ? centerTriangle.th : centerTriangle.en).split('\n').map((line, i) => (
-                        <tspan 
-                          key={i} 
-                          x={centerTriangle.textPos.x} 
+                        <tspan
+                          key={i}
+                          x={centerTriangle.textPos.x}
                           dy={i === 0 ? 0 : (lang === 'th' ? 20 : 16)}
                         >
                           {line}
@@ -293,40 +272,40 @@ export default function PoliciesSection({ lang }) {
             {hovered && (
               <div
                 className={`absolute z-20 pointer-events-none flex flex-col
-                  left-1/2 -translate-x-1/2 top-[102%] w-[320px] items-center text-center
-                  lg:w-[450px]
-                  ${activePolicy.detailSide === 'left' 
-                    ? 'lg:right-[75%] lg:left-auto lg:top-[25%] lg:-translate-y-1/2 lg:translate-x-0 lg:pr-[140px] lg:items-end lg:text-right' 
+                  left-1/2 -translate-x-1/2 top-[102%] w-[90vw] max-w-[320px] items-center text-center
+                  lg:max-w-none lg:w-[450px]
+                  ${activePolicy.detailSide === 'left'
+                    ? 'lg:right-[75%] lg:left-auto lg:top-[25%] lg:-translate-y-1/2 lg:translate-x-0 lg:pr-[140px] lg:items-end lg:text-right'
                     : ''}
-                  ${activePolicy.detailSide === 'right' 
-                    ? 'lg:left-[75%] lg:top-[25%] lg:-translate-y-1/2 lg:translate-x-0 lg:pl-[140px] lg:items-start lg:text-left' 
+                  ${activePolicy.detailSide === 'right'
+                    ? 'lg:left-[75%] lg:top-[25%] lg:-translate-y-1/2 lg:translate-x-0 lg:pl-[140px] lg:items-start lg:text-left'
                     : ''}
-                  ${activePolicy.detailSide === 'bottom' 
-                    ? 'lg:top-[75%] lg:left-[50%] lg:-translate-x-1/2 lg:pt-[130px] lg:items-center lg:text-center' 
+                  ${activePolicy.detailSide === 'bottom'
+                    ? 'lg:top-[75%] lg:left-[50%] lg:-translate-x-1/2 lg:pt-[130px] lg:items-center lg:text-center'
                     : ''}
                 `}
               >
                 <motion.div
                   key={`detail-${hovered}`}
-                  initial={{ 
-                    opacity: 0, 
+                  initial={{
+                    opacity: 0,
                     scale: 0.8,
-                    x: activePolicy.detailSide === 'left' ? 80 : activePolicy.detailSide === 'right' ? -80 : 0, 
+                    x: activePolicy.detailSide === 'left' ? 80 : activePolicy.detailSide === 'right' ? -80 : 0,
                     y: activePolicy.detailSide === 'bottom' ? -60 : activePolicy.detailSide === 'left' || activePolicy.detailSide === 'right' ? 0 : 20,
                     filter: 'blur(10px)'
                   }}
-                  animate={{ 
-                    opacity: 1, 
+                  animate={{
+                    opacity: 1,
                     scale: 1,
-                    x: 0, 
-                    y: 0, 
-                    filter: 'blur(0px)' 
+                    x: 0,
+                    y: 0,
+                    filter: 'blur(0px)'
                   }}
-                  exit={{ 
-                    opacity: 0, 
+                  exit={{
+                    opacity: 0,
                     scale: 0.9,
-                    filter: 'blur(10px)', 
-                    transition: { duration: 0.3 } 
+                    filter: 'blur(10px)',
+                    transition: { duration: 0.3 }
                   }}
                   transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
                   className={`flex flex-col w-full
@@ -340,7 +319,7 @@ export default function PoliciesSection({ lang }) {
                   </h3>
 
                   {/* Mobile Tap Indicator */}
-                  <div className={`lg:hidden mt-4 text-[#FF6B00] text-[10px] font-black tracking-[0.2em] uppercase animate-pulse ${lang === 'th' ? 'font-anakotmai' : 'font-inter'}`}>
+                  <div className={`lg:hidden mt-4 text-[#FF6B00] text-[10px] font-black tracking-[0.2em] uppercase ${lang === 'th' ? 'font-anakotmai' : 'font-inter'}`}>
                     {lang === 'th' ? 'แตะอีกครั้งเพื่อสำรวจ' : 'Tap again to explore'}
                   </div>
                 </motion.div>
@@ -349,16 +328,6 @@ export default function PoliciesSection({ lang }) {
           </AnimatePresence>
         </div>
 
-        {/* Hint Text */}
-        <motion.div 
-          animate={{ opacity: hovered ? 0 : 1 }}
-          className="mt-32 flex flex-col items-center gap-6"
-        >
-          <div className="w-[1px] h-16 bg-gradient-to-b from-[#FF6B00] to-transparent" />
-          <span className={`text-white/20 text-[9px] tracking-[0.6em] uppercase font-bold ${lang === 'th' ? 'font-anakotmai' : 'font-inter'}`}>
-            {lang === 'th' ? 'สำรวจมิติต่างๆ' : 'Discover Dimensions'}
-          </span>
-        </motion.div>
       </motion.div>
     </section>
   );
