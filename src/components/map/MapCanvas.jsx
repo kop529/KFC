@@ -1,23 +1,45 @@
-import { useState, useRef, useMemo } from 'react';
+import { useState, useRef, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ZONES } from './zones.config';
 import ZonePolygon from './ZonePolygon';
 import ZoneBubble from './ZoneBubble';
 import MapImage from '@/assets/school-map.jpg';
 import MapTutorial from './MapTutorial';
+import { TransformWrapper, TransformComponent, useControls } from 'react-zoom-pan-pinch';
+
+const MapControls = ({ activeZone }) => {
+  const { zoomToElement, resetTransform } = useControls();
+  
+  // Auto-pan to the selected zone when activeZone changes
+  // We use the ID on the <g> element to find the center
+  useEffect(() => {
+    if (activeZone) {
+      // Small timeout to ensure DOM is updated
+      setTimeout(() => {
+        zoomToElement(`zone-${activeZone}`, 1.6, 500);
+      }, 50);
+    } else {
+      resetTransform(500);
+    }
+  }, [activeZone, zoomToElement, resetTransform]);
+
+  return null;
+};
 
 export default function MapCanvas({ 
   activeZone, 
   onZoneSelect, 
   zoneCounts, 
   isMobile,
+  showMobileList,
   showTutorial,
   tutorialStep,
   demoZoneId,
   nextStep,
   skipTutorial,
   handleTutorialZoneSelect,
-  lang
+  lang,
+  onBack
 }) {
   const containerRef = useRef(null);
   const svgRef = useRef(null);
@@ -72,7 +94,7 @@ export default function MapCanvas({
             if (!isHoveredOrNone && activeZone) return null; // hide others when focused
 
             return (
-              <g key={zone.id}>
+              <g key={zone.id} id={`zone-${zone.id}`}>
                 <ZonePolygon
                   zone={zone}
                   isSelected={isSelected}
@@ -94,6 +116,7 @@ export default function MapCanvas({
       {showTutorial && tutorialStep === 1 && (
         <MapTutorial
           lang={lang}
+          activeZone={activeZone}
           step={tutorialStep}
           demoZoneId={demoZoneId}
           onNext={nextStep}
@@ -104,30 +127,51 @@ export default function MapCanvas({
     </>
   );
 
-  // ─── MOBILE VIEW TRACK ───
+  // ─── MOBILE VIEW TRACK (Pinch-to-Zoom & Pan) ───
   if (isMobile) {
+    const isBottomSheetOpen = activeZone || showMobileList;
     return (
-      <div className="relative w-full h-[100dvh] bg-[#0B0F17] overflow-hidden flex items-center justify-center pt-16" ref={containerRef}>
-        {/* On mobile, we limit the scale factor and keep X centered to prevent overflow-breaking zooms */}
-        <motion.div
-          className="relative w-full aspect-[4/3] shadow-2xl origin-center"
-          animate={{
-            scale: activeZone ? 1.4 : 1,
-            x: 0, 
-            y: activeZone ? -40 : 0
-          }}
-          style={{ transformOrigin: `${originX} ${originY}` }}
-          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+      <div 
+        className={`relative w-full bg-[#0B0F17] overflow-hidden flex items-center justify-center pt-16 transition-all duration-500 ${isBottomSheetOpen ? 'h-[25vh]' : 'h-[100dvh]'}`} 
+        ref={containerRef}
+      >
+        <TransformWrapper
+          initialScale={1}
+          initialPositionX={0}
+          initialPositionY={0}
+          minScale={0.8}
+          maxScale={4}
+          centerOnInit={true}
+          wheel={{ step: 0.1 }}
+          pinch={{ step: 5 }}
         >
-          {mapContent}
-        </motion.div>
+          <MapControls activeZone={activeZone} />
+          <TransformComponent 
+            wrapperStyle={{ width: "100%", height: "100%" }} 
+            contentStyle={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}
+          >
+            <div className="relative w-full aspect-[4/3] shadow-2xl">
+              {mapContent}
+            </div>
+          </TransformComponent>
+        </TransformWrapper>
       </div>
     );
   }
 
+  const handleWheel = (e) => {
+    if (!isMobile && activeZone && e.deltaY > 0) {
+      if (onBack) onBack();
+    }
+  };
+
   // ─── DESKTOP VIEW TRACK ───
   return (
-    <div className="relative w-full h-full bg-[#0B0F17] overflow-hidden flex items-center justify-center" ref={containerRef}>
+    <div 
+      className="relative w-full h-full bg-[#0B0F17] overflow-hidden flex items-center justify-center" 
+      ref={containerRef}
+      onWheel={handleWheel}
+    >
       <motion.div
         className="relative w-full max-w-6xl aspect-[4/3] shadow-2xl origin-center"
         animate={{

@@ -12,14 +12,10 @@ export default function FeedbackModal({ isOpen, onClose, zone, onSubmit, isGener
   const [error, setError] = useState('');
   const [submitted, setSubmitted] = useState(false);
 
-  if (!isOpen) return null;
-  // Zone-specific mode requires a zone prop
-  if (!isGeneral && !zone) return null;
-
-  const effectiveZoneId = isGeneral ? selectedZoneId : zone.id;
+  const effectiveZoneId = isGeneral ? selectedZoneId : zone?.id;
   const effectiveZoneName = isGeneral
     ? (selectedZoneId === 'general' ? 'ปัญหาทั่วไป (ไม่ระบุพื้นที่)' : ZONES.find(z => z.id === selectedZoneId)?.th)
-    : zone.th;
+    : zone?.th;
 
   const handleClose = () => {
     setText('');
@@ -45,15 +41,20 @@ export default function FeedbackModal({ isOpen, onClose, zone, onSubmit, isGener
       return;
     }
 
-    await onSubmit(effectiveZoneId, category, cleaned);
+    const result = await onSubmit(effectiveZoneId, category, cleaned);
+    if (result && result.error) {
+      setError(`ไม่สามารถส่งได้: ${result.error}`);
+      return;
+    }
     setSubmitted(true);
+    // Wait for the success message to be visible before closing
     setTimeout(() => { handleClose(); }, 1800);
   };
 
   return (
     <AnimatePresence>
-      {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      {isOpen && (!isGeneral ? !!zone : true) && (
+        <div className="fixed inset-0 z-50 flex items-end lg:items-center justify-center p-0 lg:p-4">
           {/* Backdrop */}
           <motion.div
             className="absolute inset-0 bg-[#111827]/80 backdrop-blur-sm"
@@ -62,10 +63,10 @@ export default function FeedbackModal({ isOpen, onClose, zone, onSubmit, isGener
           />
 
           <motion.div
-            className="relative bg-white w-full max-w-md rounded-xl shadow-2xl overflow-hidden"
-            initial={{ opacity: 0, y: 80, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 20, scale: 0.95 }}
+            className="relative bg-white w-full max-w-md rounded-t-3xl lg:rounded-xl shadow-2xl overflow-hidden"
+            initial={{ opacity: 0, y: "100%" }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: "100%" }}
             transition={{ type: 'spring', stiffness: 300, damping: 25 }}
           >
             {/* Header */}

@@ -108,34 +108,34 @@ export default function LeadershipSection({ lang = 'th' }) {
 
   if (isMobile) {
     return (
-      <div className="relative w-full overflow-x-hidden bg-[#0B0F17] font-sans selection:bg-[#FF6B00] selection:text-white pb-32">
+      <div className="relative w-full bg-[#0B0F17] font-sans selection:bg-[#FF6B00] selection:text-white pb-32">
         {/* ─── MOBILE LAYOUT (Stacked Sticky Sections) ─── */}
         {/* Sticky Title Bar */}
-        <div className="p-4 bg-[#0B0F17]/95 border-b border-white/5 py-5 w-full text-center sticky top-[80px] z-30 shadow-2xl backdrop-blur-md">
-          <div className="text-[13px] text-[#FF6B00] font-anakotmai font-bold mb-1.5">
+        <div className="px-4 pt-2 pb-3 bg-[#0B0F17]/95 border-b border-white/5 w-full text-center sticky top-[80px] z-30 shadow-2xl backdrop-blur-md">
+          <div className="text-[12px] text-[#FF6B00] font-anakotmai font-bold mb-0.5 leading-none mt-1">
             {data.role}
           </div>
-          <div className={`text-[28px] leading-[1.2] text-white font-black tracking-tight ${lang === 'th' ? 'font-anakotmai' : 'font-inter'}`}>
+          <div className={`text-[28px] leading-[1.1] text-white font-black tracking-tight ${lang === 'th' ? 'font-anakotmai' : 'font-inter'}`}>
             {data.name}
           </div>
         </div>
 
         {/* Sticky Image Underlay */}
         <div className="sticky top-[150px] z-10 min-h-[65dvh] w-full bg-[#0B0F17] flex justify-center items-end overflow-hidden pt-8">
-          <div className="absolute top-[-5%] left-[5%] text-[#FF6B00] z-0 font-inter font-black text-[35vh] opacity-60 leading-none pointer-events-none select-none">
+          <div className="absolute top-[15%] left-[5%] text-[#FF6B00] z-0 font-inter font-black text-[35vh] opacity-60 leading-none pointer-events-none select-none">
             {candidateData.number}
           </div>
           {/* Giant Text Watermark */}
           <div className="absolute top-1/2 right-[-20%] opacity-[0.03] pointer-events-none select-none mix-blend-overlay rotate-90">
             <span className="font-anakotmai font-black text-[22vh] tracking-tighter uppercase whitespace-nowrap text-white">
-              #TEAMCHEYHARN
+              #TEAMCHAEHAN
             </span>
           </div>
           <img
             src={candidateData.img}
             alt={data.name}
             fetchpriority="high"
-            className="h-[75vh] object-contain relative z-10 object-bottom"
+            className="h-[75vh] object-contain relative z-10 object-bottom scale-[1.4] origin-bottom"
           />
         </div>
 
@@ -164,7 +164,7 @@ export default function LeadershipSection({ lang = 'th' }) {
   return (
     <div className="relative w-full bg-[#0B0F17] font-sans selection:bg-[#FF6B00] selection:text-white pb-32">
       {/* ─── DESKTOP LAYOUT (Sticky left column) ─── */}
-      <div className="flex w-full relative z-10 max-w-[1560px] mx-auto min-h-[100dvh]">
+      <div className="flex w-full relative z-10 max-w-[1560px] mx-auto min-h-[75dvh]">
         {/* Left Column (Sticky image & number) */}
         <div className="w-[45%] xl:w-[40%] sticky top-0 h-[100dvh] max-h-[100dvh] flex items-end justify-center z-10 overflow-visible pl-4 xl:pl-8">
           <div className="relative h-[85%] w-full flex justify-center items-end">
@@ -172,16 +172,16 @@ export default function LeadershipSection({ lang = 'th' }) {
               src={candidateData.img}
               alt={data.name}
               fetchpriority="high"
-              className="z-10 relative h-full w-auto object-contain object-bottom"
+              className="z-10 relative h-full w-auto object-contain object-bottom -translate-y-[99px] scale-[1.3] origin-bottom"
             />
-            <div className="absolute z-0 text-[35vh] xl:text-[40vh] bottom-[30%] left-[0%] text-[#FF6B00] opacity-80 font-inter font-black select-none pointer-events-none leading-none">
+            <div className="absolute z-0 text-[35vh] xl:text-[40vh] bottom-[40%] left-[0%] text-[#FF6B00] opacity-80 font-inter font-black select-none pointer-events-none leading-none">
               {candidateData.number}
             </div>
           </div>
         </div>
 
         {/* Right Column (Scrolling Text) */}
-        <div className="w-[55%] xl:w-[60%] flex flex-col justify-center py-32 pl-8 pr-12 xl:pl-16 xl:pr-24 z-20">
+        <div className="w-[55%] xl:w-[60%] flex flex-col justify-center py-16 pl-8 pr-12 xl:pl-16 xl:pr-24 z-20">
           
           {/* Header Info */}
           <div className="flex w-full flex-col items-start pb-10 border-b border-white/5">

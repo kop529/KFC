@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Menu, X } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useIsMobile } from '../../hooks/use-mobile';
+import { candidateData } from '../../data/candidateData';
 
 const navLinks = [
   { en: 'Policies', th: 'นโยบาย', href: '/policies', type: 'link' },
@@ -152,11 +153,22 @@ export default function Navbar({ lang, setLang, theme = 'light' }) {
           <Link
             to="/"
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-            className="flex items-center gap-6 group"
+            className="flex items-center gap-1.5 lg:gap-3 group"
           >
             <span className="font-anakotmai font-black text-base lg:text-xl tracking-[0.2em] uppercase transition-colors duration-300 text-[#FF6B00]">
-              #TEAMCHEYHARN
+              #TEAMCHAEHAN
             </span>
+            {/* Election Number Block */}
+            <div className="flex shadow-sm">
+              <div className="w-[36px] lg:w-[46px] h-[36px] lg:h-[46px] font-anakotmai text-2xl lg:text-3xl font-black flex items-center justify-center bg-[#FF6DC6] text-black">
+                {candidateData.number}
+              </div>
+              <div className="w-[36px] lg:w-[46px] h-[36px] lg:h-[46px] bg-white flex items-center justify-center text-black">
+                <svg viewBox="0 0 15 15" className="w-[14px] h-[14px] lg:w-[22px] lg:h-[22px]" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="square">
+                  <path d="M3 3 L12 12 M12 3 L3 12" />
+                </svg>
+              </div>
+            </div>
           </Link>
 
           {/* Desktop Nav with layoutId sliding indicator */}
@@ -195,7 +207,7 @@ export default function Navbar({ lang, setLang, theme = 'light' }) {
           </nav>
 
           {/* Right Controls */}
-          <div className="flex items-center gap-8">
+          <div className="flex items-center gap-4 lg:gap-8">
             {/* Language Toggle with sliding pill */}
             <div className="flex items-center gap-1 text-sm font-inter font-bold tracking-widest relative">
               <button

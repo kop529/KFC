@@ -19,9 +19,68 @@
     <title>ประชาชลชาย — พรรคเพื่อประชาชน</title>
     <meta name="description" content="พรรคประชาชลชาย — นโยบายเพื่อประชาชน โปร่งใส ยั่งยืน เพื่ออนาคตที่ดีกว่าของทุกคน" />
     <meta name="theme-color" content="#111827" />
+    <!-- U-01 Fix: Pre-resolve language BEFORE React mounts to eliminate FOUC -->
+    <script>
+      try {
+        var _l = localStorage.getItem('app_lang');
+        if (!_l) {
+          _l = (navigator.language || navigator.userLanguage || '').toLowerCase().startsWith('th') ? 'th' : 'en';
+        }
+        document.documentElement.setAttribute('data-lang', _l);
+      } catch(e) {}
+    </script>
   </head>
+  <style>
+    #global-preloader {
+      position: fixed;
+      inset: 0;
+      background-color: #0b0f17; /* Dark theme background */
+      z-index: 999999;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .spinner {
+      width: 48px;
+      height: 48px;
+      border: 3px solid rgba(255, 107, 0, 0.15);
+      border-top-color: #FF6B00;
+      border-radius: 50%;
+      animation: spin 1s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    .preloader-hidden {
+      opacity: 0;
+      visibility: hidden;
+    }
+  </style>
   <body>
+    <div id="global-preloader">
+      <div class="spinner"></div>
+    </div>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
+    <script>
+      // Run preloader hide logic on load, completely independent of React
+      const hidePreloader = () => {
+        setTimeout(() => {
+          const preloader = document.getElementById('global-preloader');
+          if (preloader) {
+            preloader.classList.add('preloader-hidden');
+            setTimeout(() => preloader.remove(), 600);
+          }
+        }, 1200); // 1.2s delay
+      };
+
+      if (document.readyState === 'complete') {
+        hidePreloader();
+      } else {
+        window.addEventListener('load', hidePreloader);
+      }
+    </script>
   </body>
 </html>

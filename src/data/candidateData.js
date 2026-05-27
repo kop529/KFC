@@ -1,7 +1,7 @@
-import candidateImg from '../assets/candidate-1.webp';
+import candidateImg from '../assets/candidate-1.png';
 
 export const candidateData = {
-  number: "1",
+  number: "2",
   img: candidateImg,
   th: {
     role: "เเคนดิเดตผู้สมัครประธานนักเรียน",
@@ -48,7 +48,7 @@ export const candidateData = {
     role: "Candidate for Student Council President",
     name: "Chaehan Pathan",
     quote: "M.5/4 - Pre-Medical Program",
-    nickname: "Chaeharn",
+    nickname: "Chaehan",
     birthdate: "February 10, 2010",
     education: [
       "Primary School @ Preechanusart School",

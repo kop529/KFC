@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useState } from 'react';
 
 const copy = {
   en: {
@@ -155,6 +155,22 @@ function ArrowCanvas({ heroRef }) {
 
 export default function HeroSection({ lang }) {
   const heroRef = useRef(null);
+  const [isPC, setIsPC] = useState(false);
+
+  useEffect(() => {
+    // Detect if device is a PC/Notebook
+    const ua = navigator.userAgent;
+    const isMobileUA = /Mobi|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
+    const isIPad = navigator.maxTouchPoints && 
+                   navigator.maxTouchPoints > 2 && 
+                   /Macintosh/.test(ua);
+    const isTouchOnly = window.matchMedia('(pointer: coarse)').matches && 
+                        window.matchMedia('(hover: none)').matches;
+
+    if (!isMobileUA && !isIPad && !isTouchOnly) {
+      setIsPC(true);
+    }
+  }, []);
 
   return (
     <section
@@ -162,8 +178,8 @@ export default function HeroSection({ lang }) {
       className="relative min-h-screen flex flex-col justify-end overflow-hidden bg-[#111827]"
       id="hero"
     >
-      {/* Canvas Arrow Field — 1 DOM node, ~400 arrows, zero React re-renders */}
-      <ArrowCanvas heroRef={heroRef} />
+      {/* Canvas Arrow Field — Rendered only on PC/Notebook for performance */}
+      {isPC && <ArrowCanvas heroRef={heroRef} />}
 
       <div className="absolute inset-0 bg-gradient-to-b from-[#111827]/60 via-[#111827]/20 to-[#111827]" />
     </section>

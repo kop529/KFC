@@ -1,10 +1,10 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
 import { v4 as uuidv4 } from 'uuid';
 
 export function useFeedback() {
-  const [feedback, setFeedback] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [isOnCooldown, setIsOnCooldown] = useState(false);
   const [upvotedIds, setUpvotedIds] = useState(new Set());
   const COOLDOWN_MS = 60 * 1000; // 60 seconds
@@ -24,20 +24,19 @@ export function useFeedback() {
     try {
       const storedUpvotes = localStorage.getItem('upvoted_feedback_ids');
       if (storedUpvotes) {
-        setUpvotedIds(new Set(JSON.parse(storedUpvotes)));
+        const parsed = JSON.parse(storedUpvotes);
+        if (Array.isArray(parsed)) setUpvotedIds(new Set(parsed));
       }
     } catch (err) {
       console.error('[useFeedback] error loading upvotes:', err);
     }
   }, []);
 
-  const fetchFeedback = useCallback(async () => {
-    if (!supabase) {
-      setIsLoading(false);
-      return;
-    }
-    setIsLoading(true);
-    try {
+  const { data: feedback = [], isLoading } = useQuery({
+    queryKey: ['feedback'],
+    queryFn: async () => {
+      if (!supabase) return [];
+      
       const { data, error } = await supabase
         .from('school_feedback')
         .select('*')
@@ -45,27 +44,19 @@ export function useFeedback() {
 
       if (error) {
         console.error('[useFeedback] fetch error:', error.message);
-        return;
+        throw error;
       }
 
-      if (data) {
-        setFeedback(data.map(item => ({
-          id: item.id,
-          zoneId: item.zone_id,
-          category: item.category,
-          text: item.text,
-          timestamp: item.created_at,
-          upvotes: item.upvotes || 0,
-        })));
-      }
-    } catch (err) {
-      console.error('[useFeedback] unexpected error:', err);
-    } finally {
-      setIsLoading(false);
+      return (data || []).map(item => ({
+        id: item.id,
+        zoneId: item.zone_id,
+        category: item.category,
+        text: item.text,
+        timestamp: item.created_at,
+        upvotes: item.upvotes || 0,
+      }));
     }
-  }, []);
-
-  useEffect(() => { fetchFeedback(); }, [fetchFeedback]);
+  });
 
   const addFeedback = async (zoneId, category, text) => {
     // Spam protection check
@@ -91,7 +82,8 @@ export function useFeedback() {
       timestamp: new Date().toISOString(),
       upvotes: 0,
     };
-    setFeedback(prev => [newEntry, ...prev]);
+    
+    queryClient.setQueryData(['feedback'], (old = []) => [newEntry, ...old]);
 
     if (!supabase) return newEntry; // no DB configured — optimistic only
 
@@ -103,14 +95,15 @@ export function useFeedback() {
         .single();
 
       if (error) {
-        console.error('[useFeedback] insert error:', error.message);
-        setFeedback(prev => prev.filter(f => f.id !== tempId)); // revert
-        return null;
+        console.error('[useFeedback] insert error:', error.message, error.details, error.hint, error.code);
+        // Revert the optimistic update and surface the error
+        queryClient.setQueryData(['feedback'], (old = []) => old.filter(f => f.id !== tempId));
+        return { error: error.message || 'Insert failed' };
       }
 
       // Replace optimistic entry with real DB row (gets the real UUID + created_at)
       if (data) {
-        setFeedback(prev => prev.map(f =>
+        queryClient.setQueryData(['feedback'], (old = []) => old.map(f =>
           f.id === tempId
             ? { id: data.id, zoneId: data.zone_id, category: data.category, text: data.text, timestamp: data.created_at, upvotes: 0 }
             : f
@@ -118,7 +111,7 @@ export function useFeedback() {
       }
     } catch (err) {
       console.error('[useFeedback] unexpected insert error:', err);
-      setFeedback(prev => prev.filter(f => f.id !== tempId));
+      queryClient.setQueryData(['feedback'], (old = []) => old.filter(f => f.id !== tempId));
       return null;
     }
 
@@ -130,12 +123,14 @@ export function useFeedback() {
     return newEntry;
   };
 
-  const getFeedbackForZone = (zoneId) =>
+  const getFeedbackForZone = useCallback((zoneId) =>
     feedback
       .filter(f => f.zoneId === zoneId)
-      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()),
+    [feedback]
+  );
 
-  const getZoneCounts = () => {
+  const zoneCountsMemo = useMemo(() => {
     const counts = {};
     feedback.forEach(f => {
       if (f.zoneId && f.zoneId !== 'general') {
@@ -143,14 +138,16 @@ export function useFeedback() {
       }
     });
     return counts;
-  };
+  }, [feedback]);
+
+  const getZoneCounts = useCallback(() => zoneCountsMemo, [zoneCountsMemo]);
 
   const upvoteFeedback = async (id) => {
     if (upvotedIds.has(id)) return;
 
     // Optimistic update
-    setFeedback(prev =>
-      prev.map(f => f.id === id ? { ...f, upvotes: (f.upvotes || 0) + 1 } : f)
+    queryClient.setQueryData(['feedback'], (old = []) =>
+      old.map(f => f.id === id ? { ...f, upvotes: (f.upvotes || 0) + 1 } : f)
     );
     
     setUpvotedIds(prev => {

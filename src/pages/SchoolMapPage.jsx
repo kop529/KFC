@@ -23,7 +23,7 @@ export default function SchoolMapPage({ lang, setLang }) {
   const [showMobileList, setShowMobileList] = useState(false);
 
   useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    const checkMobile = () => setIsMobile(window.innerWidth < 1024); // Include tablets (e.g., iPads in portrait)
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
@@ -69,6 +69,7 @@ export default function SchoolMapPage({ lang, setLang }) {
           onZoneSelect={handleZoneSelect}
           zoneCounts={zoneCounts}
           isMobile={isMobile}
+          showMobileList={showMobileList}
           showTutorial={showTutorial}
           tutorialStep={tutorialStep}
           demoZoneId={demoZoneId}
@@ -76,6 +77,7 @@ export default function SchoolMapPage({ lang, setLang }) {
           skipTutorial={skipTutorial}
           handleTutorialZoneSelect={handleTutorialZoneSelect}
           lang={lang}
+          onBack={handleBack}
         />
 
         {/* Zone list sidebar */}
@@ -98,6 +100,7 @@ export default function SchoolMapPage({ lang, setLang }) {
               onOpenModal={() => setIsZoneModalOpen(true)}
               onUpvote={upvoteFeedback}
               upvotedIds={upvotedIds}
+              isMobile={isMobile}
             />
           )}
         </AnimatePresence>

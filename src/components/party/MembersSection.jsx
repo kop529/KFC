@@ -3,32 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import ipodImage from '@/assets/ipod.jpg';
 
-const teamsData = [
-  {
-    id: 'policy',
-    number: '01',
-    th: { title: 'ทีมนโยบาย', role: 'วางแผนและกำหนดทิศทาง', headRole: 'หัวหน้าทีมนโยบาย', headName: 'รอระบุชื่อ' },
-    en: { title: 'Policy Team', role: 'Strategic Planning & Direction', headRole: 'Head of Policy', headName: 'TBA' },
-    count: 11,
-    image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&h=800&fit=crop&crop=faces&auto=format&q=80',
-  },
-  {
-    id: 'campaign',
-    number: '02',
-    th: { title: 'ทีมหาเสียง', role: 'สื่อสารและสร้างการมีส่วนร่วม', headRole: 'หัวหน้าทีมหาเสียง', headName: 'รอระบุชื่อ' },
-    en: { title: 'Campaign Team', role: 'Communication & Engagement', headRole: 'Head of Campaign', headName: 'TBA' },
-    count: 24,
-    image: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=800&h=800&fit=crop&crop=faces&auto=format&q=80',
-  },
-  {
-    id: 'graphics',
-    number: '03',
-    th: { title: 'ทีมสื่อกราฟิก', role: 'ออกแบบและสร้างสรรค์ภาพลักษณ์', headRole: 'หัวหน้าทีมสื่อกราฟิก', headName: 'รอระบุชื่อ' },
-    en: { title: 'Graphic Media Team', role: 'Visual Design & Branding', headRole: 'Head of Graphics', headName: 'TBA' },
-    count: 22,
-    image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=800&h=800&fit=crop&crop=faces&auto=format&q=80',
-  }
-];
+import { teamsData } from '@/data/teamsData';
 
 const TUTORIAL_STEPS = {
   th: [
@@ -85,6 +60,7 @@ export default function MembersSection({ lang }) {
   const clickWheelRef = useRef(null);
   const scrollTimeout = useRef(null);
   const touchStartX = useRef(null);
+  const touchStartY = useRef(null);
 
   // Precise static positioning constants (calibrated coordinates)
   const SCREEN_POS = { top: 15.9, left: 20.5, width: 54.5, height: 29 };
@@ -103,46 +79,60 @@ export default function MembersSection({ lang }) {
   const prevTeam = () => setActiveIdx((prev) => Math.max(prev - 1, 0));
 
   useEffect(() => {
-    const el = clickWheelRef.current;
-    if (!el) return;
-
-    const onWheel = (e) => {
-      // Prevent default page scroll behavior
-      e.preventDefault();
-
-      if (scrollTimeout.current) return;
-
-      if (e.deltaY > 0) {
-        nextTeam();
-      } else if (e.deltaY < 0) {
-        prevTeam();
-      }
-
-      scrollTimeout.current = setTimeout(() => {
-        scrollTimeout.current = null;
-      }, 400); // 400ms delay between scroll triggers
-    };
-
-    el.addEventListener('wheel', onWheel, { passive: false });
     return () => {
-      el.removeEventListener('wheel', onWheel);
+      if (scrollTimeout.current) clearTimeout(scrollTimeout.current);
     };
   }, []);
 
+  // Use a callback ref to safely attach wheel event listener with passive: false
+  // even if the element is dynamically added/removed when isMobile changes
+  const setWheelRef = (node) => {
+    if (clickWheelRef.current) {
+      clickWheelRef.current.removeEventListener('wheel', handleWheelNative);
+    }
+    clickWheelRef.current = node;
+    if (clickWheelRef.current) {
+      clickWheelRef.current.addEventListener('wheel', handleWheelNative, { passive: false });
+    }
+  };
+
+  const handleWheelNative = (e) => {
+    e.preventDefault(); // Prevents page scrolling when spinning the iPod wheel
+    if (scrollTimeout.current) return;
+
+    if (e.deltaY > 0) {
+      nextTeam();
+    } else if (e.deltaY < 0) {
+      prevTeam();
+    }
+
+    scrollTimeout.current = setTimeout(() => {
+      scrollTimeout.current = null;
+    }, 400); // 400ms delay between scroll triggers
+  };
+
   const handleTouchStart = (e) => {
     touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
   };
 
   const handleTouchEnd = (e) => {
-    if (touchStartX.current === null) return;
+    if (touchStartX.current === null || touchStartY.current === null) return;
     const diffX = touchStartX.current - e.changedTouches[0].clientX;
+    const diffY = touchStartY.current - e.changedTouches[0].clientY;
     const swipeThreshold = 50; // px
-    if (diffX > swipeThreshold) {
-      nextTeam();
-    } else if (diffX < -swipeThreshold) {
-      prevTeam();
+    
+    // Only trigger horizontal swipe if it's mostly horizontal
+    if (Math.abs(diffX) > Math.abs(diffY)) {
+      if (diffX > swipeThreshold) {
+        nextTeam();
+      } else if (diffX < -swipeThreshold) {
+        prevTeam();
+      }
     }
+    
     touchStartX.current = null;
+    touchStartY.current = null;
   };
 
   // Apple iTunes Cover Flow — authentic 75° tuck physics
@@ -214,9 +204,9 @@ export default function MembersSection({ lang }) {
               animate={{ opacity: 1, scale: 1, x: 0 }}
               exit={{ opacity: 0, scale: 0.95, x: -20 }}
               transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-              className="absolute z-50 flex flex-col gap-4 p-6 bg-white/95 backdrop-blur-md rounded-2xl border border-black/10 shadow-2xl
+              className="fixed lg:absolute z-[100] flex flex-col gap-4 p-6 bg-white/95 backdrop-blur-md rounded-2xl border border-black/10 shadow-2xl
                 lg:left-[105%] lg:right-auto lg:top-1/2 lg:bottom-auto lg:-translate-y-1/2 lg:mx-0 lg:w-[260px] lg:text-left
-                bottom-[-330px] left-0 right-0 mx-auto w-[92%] sm:w-[340px] text-center"
+                bottom-6 lg:bottom-auto left-0 right-0 mx-auto w-[92%] sm:w-[340px] text-center"
             >
               {/* Skip Button */}
               <button
@@ -251,22 +241,21 @@ export default function MembersSection({ lang }) {
               {/* Step mini representation inside card (visual aid) */}
               <div className="flex justify-center my-1">
                 {tutorialStep === 1 && (
-                  <div className="flex items-center justify-center w-8 h-8 rounded-full bg-[#FF6B00]/10 text-[#FF6B00] animate-bounce">
-                    <svg className="w-5 h-5 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <div className="flex items-center justify-center w-8 h-8 rounded-full bg-[#FF6B00]/10 text-[#FF6B00]">
+                    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
                     </svg>
                   </div>
                 )}
                 {tutorialStep === 2 && (
                   <div className="flex items-center justify-center gap-3 text-[#FF6B00] font-bold text-sm">
-                    <span className="animate-[pulse_1s_infinite]">◀</span>
+                    <span>◀</span>
                     <div className="w-8 h-1 bg-black/10 rounded" />
-                    <span className="animate-[pulse_1s_infinite_0.5s]">▶</span>
+                    <span>▶</span>
                   </div>
                 )}
                 {tutorialStep === 3 && (
                   <div className="relative flex items-center justify-center w-8 h-8 rounded-full border border-black/10 bg-white shadow-sm">
-                    <div className="w-3.5 h-3.5 rounded-full bg-[#FF6B00] animate-ping absolute" />
                     <div className="w-3.5 h-3.5 rounded-full bg-[#FF6B00]" />
                   </div>
                 )}
@@ -340,11 +329,11 @@ export default function MembersSection({ lang }) {
               height: `${WHEEL_POS.height}%`,
             }}
           >
-            {/* Pulsing glow ring */}
-            <div className="absolute inset-0 rounded-full border-[3px] border-[#FF6B00] animate-[pulse_1.8s_infinite] shadow-[0_0_20px_rgba(255,107,0,0.6)] pointer-events-none" />
+            {/* Glow ring */}
+            <div className="absolute inset-0 rounded-full border-[3px] border-[#FF6B00] shadow-[0_0_20px_rgba(255,107,0,0.6)] pointer-events-none" />
             
-            {/* Spinning trace gesture arrow */}
-            <svg className="w-[110%] h-[110%] animate-[spin_3.5s_linear_infinite] opacity-80" viewBox="0 0 100 100">
+            {/* Trace gesture arrow */}
+            <svg className="w-[110%] h-[110%] opacity-80" viewBox="0 0 100 100">
               <circle
                 cx="50"
                 cy="50"
@@ -378,8 +367,8 @@ export default function MembersSection({ lang }) {
                 height: `${WHEEL_POS.height}%`,
               }}
             >
-              <div className="absolute inset-2 border-2 border-dashed border-[#FF6B00] bg-[#FF6B00]/10 rounded-l-full animate-[pulse_1.5s_infinite] shadow-[inset_0_0_15px_rgba(255,107,0,0.3)]" />
-              <span className="text-[#FF6B00] text-3xl font-black animate-[ping_1.5s_infinite] pointer-events-none select-none">◀</span>
+              <div className="absolute inset-2 border-2 border-dashed border-[#FF6B00] bg-[#FF6B00]/10 rounded-l-full shadow-[inset_0_0_15px_rgba(255,107,0,0.3)]" />
+              <span className="text-[#FF6B00] text-3xl font-black pointer-events-none select-none">◀</span>
             </div>
             {/* Right Quadrant Highlight */}
             <div
@@ -391,8 +380,8 @@ export default function MembersSection({ lang }) {
                 height: `${WHEEL_POS.height}%`,
               }}
             >
-              <div className="absolute inset-2 border-2 border-dashed border-[#FF6B00] bg-[#FF6B00]/10 rounded-r-full animate-[pulse_1.5s_infinite] shadow-[inset_0_0_15px_rgba(255,107,0,0.3)]" />
-              <span className="text-[#FF6B00] text-3xl font-black animate-[ping_1.5s_infinite] pointer-events-none select-none">▶</span>
+              <div className="absolute inset-2 border-2 border-dashed border-[#FF6B00] bg-[#FF6B00]/10 rounded-r-full shadow-[inset_0_0_15px_rgba(255,107,0,0.3)]" />
+              <span className="text-[#FF6B00] text-3xl font-black pointer-events-none select-none">▶</span>
             </div>
           </>
         )}
@@ -407,8 +396,8 @@ export default function MembersSection({ lang }) {
               height: `${WHEEL_POS.height / 3}%`,
             }}
           >
-            {/* Pulsing ring overlay around the center select button */}
-            <div className="absolute inset-0 rounded-full border-[3px] border-[#FF6B00] animate-[ping_1.2s_infinite] shadow-[0_0_20px_rgba(255,107,0,0.8)] pointer-events-none" />
+            {/* Ring overlay around the center select button */}
+            <div className="absolute inset-0 rounded-full border-[3px] border-[#FF6B00] shadow-[0_0_20px_rgba(255,107,0,0.8)] pointer-events-none" />
             <div className="absolute inset-0 rounded-full border-[3px] border-[#FF6B00] bg-[#FF6B00]/25 pointer-events-none" />
           </div>
         )}
@@ -437,14 +426,15 @@ export default function MembersSection({ lang }) {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            paddingLeft: isMobile ? '3.9cqw' : '14px',
+            paddingLeft: isMobile ? '1cqw' : '14px',
             paddingRight: isMobile ? '2.8cqw' : '10px',
             boxShadow: '0 1px 0 rgba(255,255,255,0.55) inset',
           }}>
             <span style={{
-              fontSize: isMobile ? '3.3cqw' : 'clamp(5px, 1.4vw, 12px)',
+              fontSize: isMobile ? '2.5cqw' : 'clamp(5px, 1.4vw, 12px)',
               fontWeight: 700,
               color: '#1a1a1a',
+              marginTop: isMobile ? '0px' : '0',
               letterSpacing: '-0.015em',
               textShadow: '0 1px 0 rgba(255,255,255,0.8)',
               fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
@@ -458,7 +448,7 @@ export default function MembersSection({ lang }) {
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
               style={{
-                width: isMobile ? '6.6cqw' : 'clamp(14px, 3.2vw, 24px)',
+                width: isMobile ? '5.28cqw' : 'clamp(14px, 3.2vw, 24px)',
                 height: 'auto',
                 flexShrink: 0,
                 filter: 'drop-shadow(0 1px 0 rgba(255,255,255,0.6))',
@@ -573,7 +563,7 @@ export default function MembersSection({ lang }) {
                 transition={{ duration: 0.15 }}
               >
                 <div style={{
-                  fontSize: isMobile ? '3.9cqw' : 'clamp(6px, 1.7vw, 14px)',
+                  fontSize: isMobile ? '3.5cqw' : 'clamp(6px, 1.7vw, 14px)',
                   fontWeight: 700,
                   color: '#111',
                   letterSpacing: '-0.02em',
@@ -586,7 +576,7 @@ export default function MembersSection({ lang }) {
                   {lang === 'th' ? activeTeam.th.title : activeTeam.en.title}
                 </div>
                 <div style={{
-                  fontSize: isMobile ? '3.1cqw' : 'clamp(5px, 1.3vw, 11px)',
+                  fontSize: isMobile ? '2.7cqw' : 'clamp(5px, 1.3vw, 11px)',
                   fontWeight: 400,
                   color: '#444',
                   letterSpacing: '-0.01em',
@@ -605,7 +595,7 @@ export default function MembersSection({ lang }) {
 
         {/* 2. CLICK WHEEL ZONE */}
         <div
-          ref={clickWheelRef}
+          ref={setWheelRef}
           className="absolute rounded-full cursor-pointer group"
           style={{
             top: `${WHEEL_POS.top}%`,
@@ -645,7 +635,7 @@ export default function MembersSection({ lang }) {
         {tutorialToggle}
         {titleContent}
         <div className="w-full flex justify-center pb-24">
-          <div className="relative w-[92vw] max-w-[480px] aspect-[7/10] select-none origin-top" style={{ containerType: 'inline-size' }}>
+          <div className="relative w-[130vw] max-w-[480px] aspect-[7/10] select-none origin-top" style={{ containerType: 'inline-size' }}>
             {iPodContent}
           </div>
         </div>

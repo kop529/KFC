@@ -3,19 +3,29 @@ import { ArrowLeft, MessageSquarePlus, Clock, Heart, X } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { th } from 'date-fns/locale';
 
-export default function ZoneDetailPanel({ zone, feedback, onBack, onOpenModal, onUpvote, upvotedIds }) {
+export default function ZoneDetailPanel({ zone, feedback, onBack, onOpenModal, onUpvote, upvotedIds, isMobile }) {
   if (!zone) return null;
 
   return (
     <motion.div
-      className="w-full sm:w-96 bg-[#111827] border-l border-white/10 h-full flex flex-col absolute right-0 top-0 z-20 shadow-2xl"
-      initial={{ x: "100%" }}
-      animate={{ x: 0 }}
-      exit={{ x: "100%" }}
-      transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+      className={`bg-[#111827] border-white/10 flex flex-col z-20 shadow-2xl
+        ${isMobile 
+          ? 'fixed bottom-0 left-0 w-full h-[75vh] rounded-t-3xl border-t' 
+          : 'absolute right-0 top-0 w-96 h-full border-l'}`}
+      initial={{ x: isMobile ? 0 : "100%", y: isMobile ? "100%" : 0 }}
+      animate={{ x: 0, y: 0 }}
+      exit={{ x: isMobile ? 0 : "100%", y: isMobile ? "100%" : 0 }}
+      transition={{ type: "spring", stiffness: 300, damping: 30 }}
     >
+      {/* Mobile Drag Handle Indicator */}
+      {isMobile && (
+        <div className="w-full flex justify-center pt-3 bg-[#0B0F17] rounded-t-3xl">
+          <div className="w-12 h-1.5 bg-white/20 rounded-full"></div>
+        </div>
+      )}
+
       {/* Header */}
-      <div className="p-6 border-b border-white/10 bg-[#0B0F17] relative">
+      <div className={`p-6 border-b border-white/10 bg-[#0B0F17] relative ${isMobile ? 'pt-2' : ''}`}>
         <button
           onClick={onBack}
           className="flex items-center gap-2 text-white/50 hover:text-white mb-4 text-sm font-anakotmai transition-colors"
@@ -24,7 +34,7 @@ export default function ZoneDetailPanel({ zone, feedback, onBack, onOpenModal, o
         </button>
         <button
           onClick={onBack}
-          className="absolute top-6 right-6 p-2 text-white/50 hover:text-[#FF6B00] transition-colors"
+          className={`absolute p-2 text-white/50 hover:text-[#FF6B00] transition-colors ${isMobile ? 'top-2 right-6' : 'top-6 right-6'}`}
           aria-label="Close panel"
         >
           <X size={20} />

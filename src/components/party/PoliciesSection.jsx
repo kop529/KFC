@@ -2,6 +2,10 @@ import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 
+import dimStudentsImg from '../../assets/dim-students.jpg';
+import dimSocietyImg from '../../assets/dim-society.jpg';
+import dimFutureImg from '../../assets/dim-future.jpg';
+
 export const policies = [
   {
     id: 'economy',
@@ -9,7 +13,7 @@ export const policies = [
     en: 'Develop\nStudents',
     detailTh: 'ส่งเสริมการเรียน\nกิจกรรมสร้างสรรค์\nกฎระเบียบเชิงบวก',
     detailEn: 'Promote Learning,\nCreative Activities,\nPositive Discipline.',
-    image: 'https://images.unsplash.com/photo-1535401991746-da3d9055713e?w=1200&q=75&auto=format&fit=crop',
+    image: dimStudentsImg,
     points: "0,0 200,0 100,173",
     textPos: { x: 100, y: 54 },
     detailSide: 'left'
@@ -20,7 +24,7 @@ export const policies = [
     en: 'Develop\nSociety',
     detailTh: 'สาธารณะประโยชน์\nนโยบายเพื่อเราๆ\nชรอ.ที่น่าค้นหา',
     detailEn: 'Public Service,\nCommunity Policies,\nDiscoverable Society.',
-    image: 'https://images.unsplash.com/photo-1555848962-6e79363ec18f?w=1200&q=75&auto=format&fit=crop',
+    image: dimSocietyImg,
     points: "200,0 400,0 300,173",
     textPos: { x: 300, y: 55 },
     detailSide: 'right'
@@ -31,7 +35,7 @@ export const policies = [
     en: 'Develop\nFuture',
     detailTh: 'โรงเรียนรักโลก\nจัดการทรัพยากร\nเพื่ออนาคตที่ยั่งยืน',
     detailEn: 'Green School,\nResource Management,\nSustainable Future.',
-    image: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=1200&q=75&auto=format&fit=crop',
+    image: dimFutureImg,
     points: "100,173 300,173 200,346",
     textPos: { x: 200, y: 230 },
     detailSide: 'bottom'
@@ -74,14 +78,16 @@ export default function PoliciesSection({ lang }) {
     if (isMobile && isClick) {
       if (lastTapped === id) {
         setIsNavigating(true);
-        navigate(`/policies/${id}`);
+        if (id === 'quality') navigate(`/policies/ด้านสิ่งแวดล้อม`);
+        else navigate(`/dimension/${id === 'economy' ? 'มิติพัฒนาผู้เรียน' : 'มิติพัฒนาสังคม'}`);
       } else {
         setHovered(id);
         setLastTapped(id);
       }
     } else if (isClick) {
       setIsNavigating(true);
-      navigate(`/policies/${id}`);
+      if (id === 'quality') navigate(`/policies/ด้านสิ่งแวดล้อม`);
+      else navigate(`/dimension/${id === 'economy' ? 'มิติพัฒนาผู้เรียน' : 'มิติพัฒนาสังคม'}`);
     } else {
       if (!isNavigating) setHovered(id);
     }
@@ -91,7 +97,8 @@ export default function PoliciesSection({ lang }) {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
       setIsNavigating(true);
-      navigate(`/policies/${id}`);
+      if (id === 'quality') navigate(`/policies/ด้านสิ่งแวดล้อม`);
+      else navigate(`/dimension/${id === 'economy' ? 'มิติพัฒนาผู้เรียน' : 'มิติพัฒนาสังคม'}`);
     }
   };
 

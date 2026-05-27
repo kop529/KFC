@@ -135,21 +135,19 @@ function WelcomeStep({ lang, onNext, onSkip }) {
 }
 
 /* ─── Step 1 — Pulsing zone highlight ─── */
-function ZoneHighlightStep({ lang, demoZoneId, onNext, onSkip, onZoneSelect }) {
+function ZoneHighlightStep({ lang, demoZoneId, onNext, onSkip, onZoneSelect, activeZone }) {
   const c = COPY[lang].step1;
   const skip = COPY[lang].skip;
 
   const zone = ZONES.find(z => z.id === demoZoneId);
   const { cx, cy } = zone ? getPolygonCentroid(zone.points) : { cx: 0.5, cy: 0.5 };
 
-  /* Auto-advance if user doesn't click within 6 s */
+  /* Advance if the user clicks the actual zone polygon */
   useEffect(() => {
-    const timer = setTimeout(() => {
-      onZoneSelect(demoZoneId);
+    if (activeZone === demoZoneId) {
       onNext();
-    }, 5000);
-    return () => clearTimeout(timer);
-  }, [demoZoneId, onNext, onZoneSelect]);
+    }
+  }, [activeZone, demoZoneId, onNext]);
 
   /* Manual click on pulse ring also advances */
   const handleClick = () => {
@@ -174,10 +172,10 @@ function ZoneHighlightStep({ lang, demoZoneId, onNext, onSkip, onZoneSelect }) {
         }}
         onClick={handleClick}
       >
-        {/* Outer expanding rings */}
-        <div className="absolute inset-0 rounded-full bg-[#FF6B00]/30 animate-[ping_1.2s_cubic-bezier(0,0,0.2,1)_infinite]"
+        {/* Outer rings */}
+        <div className="absolute inset-0 rounded-full bg-[#FF6B00]/30"
           style={{ width: 72, height: 72, marginLeft: -36, marginTop: -36 }} />
-        <div className="absolute inset-0 rounded-full bg-[#FF6B00]/20 animate-[ping_1.2s_cubic-bezier(0,0,0.2,1)_0.4s_infinite]"
+        <div className="absolute inset-0 rounded-full bg-[#FF6B00]/20"
           style={{ width: 88, height: 88, marginLeft: -44, marginTop: -44 }} />
         {/* Center dot */}
         <div className="w-8 h-8 rounded-full bg-[#FF6B00] border-2 border-white shadow-lg shadow-[#FF6B00]/60 flex items-center justify-center -translate-x-1/2 -translate-y-1/2">
@@ -196,8 +194,6 @@ function ZoneHighlightStep({ lang, demoZoneId, onNext, onSkip, onZoneSelect }) {
       >
         <motion.div
           className="bg-[#111827] border border-white/20 text-white text-xs font-anakotmai px-3 py-1.5 rounded-full shadow-lg whitespace-nowrap"
-          animate={{ y: [0, -4, 0] }}
-          transition={{ repeat: Infinity, duration: 2 }}
         >
           {c.label}
         </motion.div>
@@ -225,40 +221,26 @@ function PanelPointerStep({ lang, onNext, onSkip, isZoneModalOpen }) {
   const btnRef = useRef(null);
   const [pos, setPos] = useState({ top: 0, left: 0 });
 
-  /* Locate the feedback button by its data attribute.
-     The ZoneDetailPanel slides in with a ~500ms animation, so the button
-     may not be in the DOM on first render. We retry every 200ms. */
+  /* Locate the feedback button continuously to handle slide animations */
   useEffect(() => {
-    let attempts = 0;
-    const maxAttempts = 15; // 15 × 200ms = 3s max wait
-    let intervalId;
+    let animationFrameId;
 
-    const locate = () => {
+    const trackPosition = () => {
       const btn = document.querySelector('[data-tutorial="feedback-btn"]');
       if (btn) {
         const rect = btn.getBoundingClientRect();
-        setPos({ top: rect.top + rect.height / 2, right: window.innerWidth - rect.left + 12 });
-        if (intervalId) clearInterval(intervalId);
-        return true;
+        setPos({ 
+          top: rect.top + rect.height / 2, 
+          right: window.innerWidth - rect.left + 12 
+        });
       }
-      return false;
+      animationFrameId = requestAnimationFrame(trackPosition);
     };
 
-    // Try immediately, then poll
-    if (!locate()) {
-      intervalId = setInterval(() => {
-        attempts++;
-        if (locate() || attempts >= maxAttempts) {
-          clearInterval(intervalId);
-        }
-      }, 200);
-    }
+    animationFrameId = requestAnimationFrame(trackPosition);
 
-    // Also reposition on resize
-    window.addEventListener('resize', locate);
     return () => {
-      if (intervalId) clearInterval(intervalId);
-      window.removeEventListener('resize', locate);
+      cancelAnimationFrame(animationFrameId);
     };
   }, []);
 
@@ -280,8 +262,6 @@ function PanelPointerStep({ lang, onNext, onSkip, isZoneModalOpen }) {
       <motion.div
         className="absolute"
         style={{ top: pos.top - 18, right: pos.right, pointerEvents: 'none' }}
-        animate={{ x: [0, 8, 0] }}
-        transition={{ repeat: Infinity, duration: 1.2, ease: 'easeInOut' }}
       >
         <div className="flex items-center gap-2 bg-[#111827] border border-[#FF6B00]/60 text-white text-xs font-anakotmai px-3 py-2 rounded-xl shadow-xl whitespace-nowrap">
           {c.label}
@@ -306,37 +286,27 @@ function ModalPointerStep({ lang, onNext, onSkip, isZoneModalOpen }) {
   const skip = COPY[lang].skip;
   const [pos, setPos] = useState({ top: 0, left: 0 });
 
-  /* Locate the textarea inside the modal */
+  /* Locate the textarea inside the modal continuously */
   useEffect(() => {
-    let attempts = 0;
-    const maxAttempts = 15;
-    let intervalId;
+    let animationFrameId;
 
-    const locate = () => {
+    const trackPosition = () => {
       const el = document.querySelector('[data-tutorial="feedback-textarea"]');
       if (el) {
         const rect = el.getBoundingClientRect();
-        // Position to the left of the textarea
-        setPos({ top: rect.top + 30, right: window.innerWidth - rect.left + 12 });
-        if (intervalId) clearInterval(intervalId);
-        return true;
+        // Position in the center of the textarea
+        setPos({ 
+          top: rect.top + rect.height / 2, 
+          left: rect.left + rect.width / 2 
+        });
       }
-      return false;
+      animationFrameId = requestAnimationFrame(trackPosition);
     };
 
-    if (!locate()) {
-      intervalId = setInterval(() => {
-        attempts++;
-        if (locate() || attempts >= maxAttempts) {
-          clearInterval(intervalId);
-        }
-      }, 200);
-    }
+    animationFrameId = requestAnimationFrame(trackPosition);
 
-    window.addEventListener('resize', locate);
     return () => {
-      if (intervalId) clearInterval(intervalId);
-      window.removeEventListener('resize', locate);
+      cancelAnimationFrame(animationFrameId);
     };
   }, []);
 
@@ -357,13 +327,15 @@ function ModalPointerStep({ lang, onNext, onSkip, isZoneModalOpen }) {
       {/* Animated arrow pointing to the textarea */}
       <motion.div
         className="absolute"
-        style={{ top: pos.top - 18, right: pos.right, pointerEvents: 'none' }}
-        animate={{ x: [0, 8, 0] }}
-        transition={{ repeat: Infinity, duration: 1.2, ease: 'easeInOut' }}
+        style={{ 
+          top: pos.top, 
+          left: pos.left, 
+          pointerEvents: 'none',
+          transform: 'translate(-50%, -50%)'
+        }}
       >
-        <div className="flex items-center gap-2 bg-[#111827] border border-[#FF6B00]/60 text-white text-xs font-anakotmai px-3 py-2 rounded-xl shadow-xl whitespace-nowrap">
+        <div className="bg-[#111827] border-2 border-[#FF6B00] text-white text-xs font-anakotmai px-4 py-2.5 rounded-full shadow-2xl whitespace-nowrap">
           {c.label}
-          <ChevronRight size={14} className="text-[#FF6B00]" />
         </div>
       </motion.div>
 
@@ -400,7 +372,7 @@ function DoneBanner({ lang }) {
 }
 
 /* ─── Main export ─── */
-export default function MapTutorial({ lang = 'th', step, demoZoneId, onNext, onSkip, onZoneSelect, isZoneModalOpen }) {
+export default function MapTutorial({ lang = 'th', step, demoZoneId, onNext, onSkip, onZoneSelect, isZoneModalOpen, activeZone }) {
   const safeLang = lang === 'en' ? 'en' : 'th';
 
   return (
@@ -416,6 +388,7 @@ export default function MapTutorial({ lang = 'th', step, demoZoneId, onNext, onS
           onNext={onNext}
           onSkip={onSkip}
           onZoneSelect={onZoneSelect}
+          activeZone={activeZone}
         />
       )}
       {step === 2 && (

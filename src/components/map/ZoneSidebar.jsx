@@ -25,23 +25,35 @@ export default function ZoneSidebar({ activeZone, onZoneSelect, zoneCounts, isMo
     })
     .sort((a, b) => b.count - a.count);
 
-  // Responsive x offset logic for sliding
-  const xOffset = isMobile 
-    ? (showMobileList && !activeZone ? 0 : "-100%") 
-    : (activeZone ? "-100%" : 0);
+  // Responsive offset logic
+  const mobileYOffset = (showMobileList && !activeZone) ? "0%" : "100%";
+  const desktopXOffset = activeZone ? "-100%" : "0%";
 
   return (
     <motion.div 
-      className="w-full sm:w-80 bg-[#111827] border-r border-white/10 h-full flex flex-col absolute left-0 top-0 z-20 shadow-2xl sm:shadow-none"
-      initial={{ x: "-100%" }}
-      animate={{ x: xOffset }}
-      transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+      className={`bg-[#111827] border-white/10 flex flex-col z-20 shadow-2xl lg:shadow-none
+        ${isMobile 
+          ? 'fixed bottom-0 left-0 w-full h-[75vh] rounded-t-3xl border-t' 
+          : 'absolute left-0 top-0 w-80 h-full border-r'}`}
+      initial={{ x: isMobile ? 0 : "-100%", y: isMobile ? "100%" : 0 }}
+      animate={{ 
+        x: isMobile ? 0 : desktopXOffset, 
+        y: isMobile ? mobileYOffset : 0 
+      }}
+      transition={{ type: "spring", stiffness: 300, damping: 30 }}
     >
-      <div className="p-6 border-b border-white/10 relative">
+      {/* Mobile Drag Handle Indicator */}
+      {isMobile && (
+        <div className="w-full flex justify-center pt-3 pb-1">
+          <div className="w-12 h-1.5 bg-white/20 rounded-full"></div>
+        </div>
+      )}
+
+      <div className={`p-6 border-b border-white/10 relative ${isMobile ? 'pt-2' : ''}`}>
         {isMobile && (
           <button 
             onClick={onCloseMobileList}
-            className="absolute top-6 right-6 p-2 text-white/50 hover:text-white transition-colors"
+            className="absolute top-2 right-6 p-2 text-white/50 hover:text-white transition-colors"
             aria-label="Close search list"
           >
             <X size={20} />
